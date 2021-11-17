@@ -1,9 +1,11 @@
 package user
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"log"
+	"os"
 )
 
 type User struct {
@@ -56,8 +58,19 @@ func LogIn(users []User) (u User, err error) {
 	return
 }
 
-func AddPost() {
+func AddPost() (post []byte, err error) {
 
+	r := bufio.NewReader(os.Stdin)
+	r.ReadString('\n')
+
+	fmt.Print("Enter text: ")
+	post, _, err = r.ReadLine()
+	if err != nil {
+		log.Println("Error to add post", err)
+		return
+	}
+
+	return
 }
 
 func EditPost() {

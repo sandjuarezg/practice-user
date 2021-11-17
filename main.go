@@ -45,7 +45,7 @@ func main() {
 				fmt.Println("3. Delete post")
 				fmt.Println("4. Show your posts")
 				fmt.Println("5. Show user's posts")
-				fmt.Scan(&opc)
+				fmt.Scanln(&opc)
 
 				switch opc {
 				case 0:
@@ -54,10 +54,31 @@ func main() {
 					back = true
 
 				case 1:
+
+					post, err := user.AddPost()
+					if err != nil {
+						log.Println(err)
+						return
+					}
+					fmt.Println("Post added successfully")
+
+					u.Post = append(u.Post, string(post))
+
 				case 2:
+
+					user.EditPost()
+
 				case 3:
+
+					user.DeletePost()
+
 				case 4:
+
+					user.ShowAllPosts()
+
 				case 5:
+
+					user.ShowUserPost()
 
 				default:
 
