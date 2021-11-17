@@ -81,8 +81,10 @@ func DeletePost() {
 
 }
 
-func ShowAllPosts() {
-
+func ShowAllPosts(u User) {
+	for i, v := range u.Post {
+		fmt.Printf("%d. %s\n", i+1, v)
+	}
 }
 
 func ShowUserPost() {

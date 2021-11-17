@@ -73,8 +73,8 @@ func main() {
 					user.DeletePost()
 
 				case 4:
-
-					user.ShowAllPosts()
+					fmt.Println("- All your post -")
+					user.ShowAllPosts(u)
 
 				case 5:
 
