@@ -2,11 +2,15 @@ package main
 
 import (
 	"fmt"
+	"log"
+
+	"github.com/sandjuarezg/practice-user-memory/user"
 )
 
 func main() {
 	var opc int
 	var exit bool
+	var users []user.User
 
 	for !exit {
 
@@ -25,6 +29,14 @@ func main() {
 		case 1:
 
 		case 2:
+
+			u, err := user.AddUser()
+			if err != nil {
+				log.Fatal("user couldn't be added", err)
+			}
+			fmt.Println("User added successfully")
+
+			users = append(users, u)
 
 		default:
 
