@@ -28,6 +28,13 @@ func main() {
 
 		case 1:
 
+			u, err := user.LogIn(users)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			fmt.Println("Welcome", u.User)
+
 		case 2:
 
 			u, err := user.AddUser()
