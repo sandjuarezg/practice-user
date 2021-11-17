@@ -33,7 +33,38 @@ func main() {
 				log.Println(err)
 				return
 			}
-			fmt.Println("Welcome", u.User)
+
+			var back bool
+
+			for !back {
+
+				fmt.Printf("- Welcome %s -\n", u.User)
+				fmt.Println("0. Sign off")
+				fmt.Println("1. Add post")
+				fmt.Println("2. Edit post")
+				fmt.Println("3. Delete post")
+				fmt.Println("4. Show your posts")
+				fmt.Println("5. Show user's posts")
+				fmt.Scan(&opc)
+
+				switch opc {
+				case 0:
+
+					fmt.Println(". . . B Y E . . .")
+					back = true
+
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+
+				default:
+
+					fmt.Println("Option not valid")
+
+				}
+			}
 
 		case 2:
 
