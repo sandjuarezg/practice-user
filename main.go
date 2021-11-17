@@ -32,7 +32,8 @@ func main() {
 
 			u, err := user.AddUser()
 			if err != nil {
-				log.Fatal("user couldn't be added", err)
+				log.Println("User couldn't be added", err)
+				return
 			}
 			fmt.Println("User added successfully")
 

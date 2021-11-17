@@ -1,6 +1,9 @@
 package user
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 type User struct {
 	User string
@@ -11,9 +14,17 @@ type User struct {
 func AddUser() (u User, err error) {
 	fmt.Println("Enter user name")
 	_, err = fmt.Scan(&u.User)
+	if err != nil {
+		log.Println("Error to add name", err)
+		return
+	}
 
 	fmt.Println("Enter password")
 	_, err = fmt.Scan(&u.Pass)
+	if err != nil {
+		log.Println("Error to add password", err)
+		return
+	}
 
 	return
 }
