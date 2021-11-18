@@ -32,23 +32,25 @@ func AddUser() (u User, err error) {
 	return
 }
 
-func LogIn(users []User) (u User, err error) {
+func LogIn(users []User) (n int, err error) {
+	var aux User
+
 	fmt.Println("Enter user name")
-	_, err = fmt.Scan(&u.User)
+	_, err = fmt.Scan(&aux.User)
 	if err != nil {
 		log.Println("Error to find name", err)
 		return
 	}
 
 	fmt.Println("Enter password")
-	_, err = fmt.Scan(&u.Pass)
+	_, err = fmt.Scan(&aux.Pass)
 	if err != nil {
 		log.Println("Error to find password", err)
 		return
 	}
 
-	for _, v := range users {
-		if v.User == u.User && v.Pass == u.Pass {
+	for n = range users {
+		if users[n].User == aux.User && users[n].Pass == aux.Pass {
 			return
 		}
 	}
@@ -87,6 +89,29 @@ func ShowAllPosts(u User) {
 	}
 }
 
-func ShowUserPost() {
+func ShowUserPost(users []User) (err error) {
+	var aux string
 
+	fmt.Println("Enter user name")
+	_, err = fmt.Scan(&aux)
+	if err != nil {
+		log.Println("Error to find name", err)
+		return
+	}
+
+	for _, u := range users {
+		if u.User == aux {
+			fmt.Printf("- %s's posts -\n", u.User)
+
+			for i, v := range u.Post {
+				fmt.Printf("%d. %s\n", i+1, v)
+			}
+
+			return
+		}
+	}
+
+	err = errors.New("User not found")
+
+	return
 }

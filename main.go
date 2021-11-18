@@ -28,7 +28,7 @@ func main() {
 
 		case 1:
 
-			u, err := user.LogIn(users)
+			n, err := user.LogIn(users)
 			if err != nil {
 				log.Println(err)
 				return
@@ -38,7 +38,7 @@ func main() {
 
 			for !back {
 
-				fmt.Printf("- Welcome %s -\n", u.User)
+				fmt.Printf("- Welcome %s -\n", users[n].User)
 				fmt.Println("0. Sign off")
 				fmt.Println("1. Add post")
 				fmt.Println("2. Edit post")
@@ -60,9 +60,9 @@ func main() {
 						log.Println(err)
 						return
 					}
-					fmt.Println("Post added successfully")
 
-					u.Post = append(u.Post, string(post))
+					users[n].Post = append(users[n].Post, string(post))
+					fmt.Println("Post added successfully")
 
 				case 2:
 
@@ -74,11 +74,15 @@ func main() {
 
 				case 4:
 					fmt.Println("- All your post -")
-					user.ShowAllPosts(u)
+					user.ShowAllPosts(users[n])
 
 				case 5:
 
-					user.ShowUserPost()
+					err := user.ShowUserPost(users)
+					if err != nil {
+						log.Println(err)
+						return
+					}
 
 				default:
 
@@ -94,9 +98,9 @@ func main() {
 				log.Println("User couldn't be added", err)
 				return
 			}
-			fmt.Println("User added successfully")
 
 			users = append(users, u)
+			fmt.Println("User added successfully")
 
 		default:
 
