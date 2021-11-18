@@ -76,6 +76,24 @@ func AddPost() (post []byte, err error) {
 }
 
 func EditPost(users []User, n int) (err error) {
+	var i int
+	fmt.Scanln(&i)
+	i--
+
+	if i > len(users[0].Post)-1 {
+		err = errors.New("number out of range")
+		return
+	}
+
+	r := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter text: ")
+	aux, _, err := r.ReadLine()
+	if err != nil {
+		log.Println("Error to edit post", err)
+		return
+	}
+
+	users[0].Post[i] = string(aux)
 
 	return
 }
