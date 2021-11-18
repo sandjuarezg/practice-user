@@ -66,11 +66,27 @@ func main() {
 
 				case 2:
 
-					user.EditPost()
+					fmt.Println("- Enter num of post to edit -")
+					user.ShowAllPosts(users[n])
+					err = user.EditPost(users, n)
+					if err != nil {
+						log.Println(err)
+						return
+					}
+
+					fmt.Println("Post edited successfully")
 
 				case 3:
 
-					user.DeletePost()
+					fmt.Println("- Enter num of post to delete -")
+					user.ShowAllPosts(users[n])
+					err = user.DeletePost(users, n)
+					if err != nil {
+						log.Println(err)
+						return
+					}
+
+					fmt.Println("Post deleted successfully")
 
 				case 4:
 					fmt.Println("- All your post -")

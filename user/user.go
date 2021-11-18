@@ -75,12 +75,24 @@ func AddPost() (post []byte, err error) {
 	return
 }
 
-func EditPost() {
+func EditPost(users []User, n int) (err error) {
 
+	return
 }
 
-func DeletePost() {
+func DeletePost(users []User, n int) (err error) {
+	var i int
+	fmt.Scanln(&i)
+	i--
 
+	if i > len(users[0].Post)-1 {
+		err = errors.New("number out of range")
+		return
+	}
+
+	users[n].Post = append(users[0].Post[:i], users[0].Post[i+1:]...)
+
+	return
 }
 
 func ShowAllPosts(u User) {
