@@ -9,19 +9,19 @@ import (
 )
 
 type User struct {
-	User string
+	Name string
 	Pass string
 	Post []string
 }
 
-func AddUser() (u User, err error) {
+func CreateUser() (u User, err error) {
 	fmt.Println("Enter user name")
 	aux, _, err := bufio.NewReader(os.Stdin).ReadLine()
 	if err != nil {
 		log.Println("Error to add name", err)
 		return
 	}
-	u.User = string(aux)
+	u.Name = string(aux)
 
 	fmt.Println()
 
@@ -33,13 +33,12 @@ func AddUser() (u User, err error) {
 	}
 	u.Pass = string(aux)
 
-	fmt.Println()
-
 	return
 }
 
 func LogIn(users []User) (n int, err error) {
 	var aux User
+	n = -1
 
 	fmt.Println("Enter user name")
 	name, _, err := bufio.NewReader(os.Stdin).ReadLine()
@@ -47,7 +46,7 @@ func LogIn(users []User) (n int, err error) {
 		log.Println("Error to find name", err)
 		return
 	}
-	aux.User = string(name)
+	aux.Name = string(name)
 
 	fmt.Println()
 
@@ -59,19 +58,17 @@ func LogIn(users []User) (n int, err error) {
 	}
 	aux.Pass = string(pass)
 
-	for n = range users {
-		if users[n].User == aux.User && users[n].Pass == aux.Pass {
-			return
+	for i := range users {
+		if users[i].Name == aux.Name && users[i].Pass == aux.Pass {
+			n = i
+			break
 		}
 	}
-
-	fmt.Println()
-	err = errors.New("User not found")
 
 	return
 }
 
-func AddPost() (post []byte, err error) {
+func CreatePost() (post []byte, err error) {
 
 	fmt.Print("Enter text: ")
 	post, _, err = bufio.NewReader(os.Stdin).ReadLine()
@@ -135,8 +132,8 @@ func ShowUserPost(users []User) (err error) {
 	}
 
 	for _, u := range users {
-		if u.User == string(aux) {
-			fmt.Printf("- %s's posts -\n", u.User)
+		if u.Name == string(aux) {
+			fmt.Printf("- %s's posts -\n", u.Name)
 
 			for i, v := range u.Post {
 				fmt.Printf("%d. %s\n", i+1, v)

@@ -9,11 +9,17 @@ import (
 )
 
 func main() {
-	functionality.CleanConsole()
+	var (
+		opc   int
+		exit  bool
+		users []user.User
+	)
 
-	var opc int
-	var exit bool
-	var users []user.User
+	err := functionality.CleanConsole()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	for !exit {
 
@@ -23,7 +29,11 @@ func main() {
 		fmt.Println("2. Sign up")
 		fmt.Scanln(&opc)
 
-		functionality.CleanConsole()
+		err = functionality.CleanConsole()
+		if err != nil {
+			log.Println(err)
+			continue
+		}
 
 		switch opc {
 		case 0:
@@ -31,14 +41,32 @@ func main() {
 			fmt.Println(". . . .  B Y E  . . . .")
 			exit = true
 
-			functionality.CleanConsole()
+			err = functionality.CleanConsole()
+			if err != nil {
+				log.Println(err)
+				continue
+			}
 
 		case 1:
 
 			n, err := user.LogIn(users)
+			if n < 0 {
+				log.Println("User not found")
+
+				err = functionality.CleanConsole()
+				if err != nil {
+					log.Println(err)
+				}
+				continue
+			}
+
 			if err != nil {
 				log.Println(err)
-				functionality.CleanConsole()
+
+				err = functionality.CleanConsole()
+				if err != nil {
+					log.Println(err)
+				}
 				continue
 			}
 
@@ -46,9 +74,13 @@ func main() {
 
 			for !back {
 
-				functionality.CleanConsole()
+				err = functionality.CleanConsole()
+				if err != nil {
+					log.Println(err)
+					continue
+				}
 
-				fmt.Printf("- Welcome %s -\n", users[n].User)
+				fmt.Printf("- Welcome %s -\n", users[n].Name)
 				fmt.Println("0. Sign off")
 				fmt.Println("1. Add post")
 				fmt.Println("2. Edit post")
@@ -57,7 +89,11 @@ func main() {
 				fmt.Println("5. Show user's posts")
 				fmt.Scanln(&opc)
 
-				functionality.CleanConsole()
+				err = functionality.CleanConsole()
+				if err != nil {
+					log.Println(err)
+					continue
+				}
 
 				switch opc {
 				case 0:
@@ -65,14 +101,23 @@ func main() {
 					fmt.Println(". . . .  B Y E  . . . .")
 					back = true
 
-					functionality.CleanConsole()
+					err = functionality.CleanConsole()
+					if err != nil {
+						log.Println(err)
+						continue
+					}
 
 				case 1:
 
-					post, err := user.AddPost()
+					post, err := user.CreatePost()
 					if err != nil {
 						log.Println(err)
-						functionality.CleanConsole()
+
+						err = functionality.CleanConsole()
+						if err != nil {
+							log.Println(err)
+						}
+
 						continue
 					}
 
@@ -88,7 +133,12 @@ func main() {
 					err = user.EditPost(users, n)
 					if err != nil {
 						log.Println(err)
-						functionality.CleanConsole()
+
+						err = functionality.CleanConsole()
+						if err != nil {
+							log.Println(err)
+						}
+
 						continue
 					}
 
@@ -103,7 +153,12 @@ func main() {
 					err = user.DeletePost(users, n)
 					if err != nil {
 						log.Println(err)
-						functionality.CleanConsole()
+
+						err = functionality.CleanConsole()
+						if err != nil {
+							log.Println(err)
+						}
+
 						continue
 					}
 
@@ -124,7 +179,12 @@ func main() {
 					err := user.ShowUserPost(users)
 					if err != nil {
 						log.Println(err)
-						functionality.CleanConsole()
+
+						err = functionality.CleanConsole()
+						if err != nil {
+							log.Println(err)
+						}
+
 						continue
 					}
 
@@ -135,29 +195,48 @@ func main() {
 				default:
 
 					fmt.Println("Option not valid")
-					functionality.CleanConsole()
+
+					err = functionality.CleanConsole()
+					if err != nil {
+						log.Println(err)
+						continue
+					}
 
 				}
 			}
 
 		case 2:
 
-			u, err := user.AddUser()
+			u, err := user.CreateUser()
 			if err != nil {
 				log.Println("User couldn't be added", err)
-				functionality.CleanConsole()
+
+				err = functionality.CleanConsole()
+				if err != nil {
+					log.Println(err)
+				}
+
 				continue
 			}
 
 			users = append(users, u)
 			fmt.Println("User added successfully")
 
-			functionality.CleanConsole()
+			err = functionality.CleanConsole()
+			if err != nil {
+				log.Println(err)
+				continue
+			}
 
 		default:
 
 			fmt.Println("Option not valid")
-			functionality.CleanConsole()
+
+			err = functionality.CleanConsole()
+			if err != nil {
+				log.Println(err)
+				continue
+			}
 
 		}
 

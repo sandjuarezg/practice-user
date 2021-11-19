@@ -7,11 +7,17 @@ import (
 	"time"
 )
 
-func CleanConsole() {
+func CleanConsole() (err error) {
 	fmt.Println(". . . . . . . . . . . .")
 	time.Sleep(3 * time.Second)
 
 	cmd := exec.Command("clear")
 	cmd.Stdout = os.Stdout
-	cmd.Run()
+
+	err = cmd.Run()
+	if err != nil {
+		return
+	}
+
+	return
 }
