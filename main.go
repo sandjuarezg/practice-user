@@ -50,8 +50,8 @@ func main() {
 		case 1:
 
 			u, err := user.LogIn(users)
-			if u == nil {
-				log.Println("User not found")
+			if err != nil {
+				log.Println(err)
 
 				err = functionality.CleanConsole()
 				if err != nil {
@@ -60,8 +60,8 @@ func main() {
 				continue
 			}
 
-			if err != nil {
-				log.Println(err)
+			if u == nil {
+				log.Println("User not found")
 
 				err = functionality.CleanConsole()
 				if err != nil {
@@ -178,16 +178,6 @@ func main() {
 				case 5:
 
 					u, err := user.GetUser(users)
-					if u == nil {
-						log.Println("User not found")
-
-						err = functionality.CleanConsole()
-						if err != nil {
-							log.Println(err)
-						}
-						continue
-					}
-
 					if err != nil {
 						log.Println(err)
 
@@ -196,6 +186,16 @@ func main() {
 							log.Println(err)
 						}
 
+						continue
+					}
+
+					if u == nil {
+						log.Println("User not found")
+
+						err = functionality.CleanConsole()
+						if err != nil {
+							log.Println(err)
+						}
 						continue
 					}
 
