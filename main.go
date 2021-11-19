@@ -177,7 +177,7 @@ func main() {
 
 				case 5:
 
-					u, err := user.ShowUserPost(users)
+					u, err := user.GetUser(users)
 					if u == nil {
 						log.Println("User not found")
 

@@ -122,7 +122,7 @@ func ShowAllPosts(u *User) {
 	}
 }
 
-func ShowUserPost(users []User) (u *User, err error) {
+func GetUser(users []User) (u *User, err error) {
 	fmt.Println("Enter user name")
 	aux, _, err := bufio.NewReader(os.Stdin).ReadLine()
 	if err != nil {
