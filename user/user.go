@@ -36,9 +36,8 @@ func CreateUser() (u User, err error) {
 	return
 }
 
-func LogIn(users []User) (n int, err error) {
+func LogIn(users []User) (u *User, err error) {
 	var aux User
-	n = -1
 
 	fmt.Println("Enter user name")
 	name, _, err := bufio.NewReader(os.Stdin).ReadLine()
@@ -60,7 +59,7 @@ func LogIn(users []User) (n int, err error) {
 
 	for i := range users {
 		if users[i].Name == aux.Name && users[i].Pass == aux.Pass {
-			n = i
+			u = &users[i]
 			break
 		}
 	}
@@ -80,12 +79,12 @@ func CreatePost() (post []byte, err error) {
 	return
 }
 
-func EditPost(users []User, n int) (err error) {
+func EditPost(u *User) (err error) {
 	var i int
 	fmt.Scanln(&i)
 	i--
 
-	if i > len(users[n].Post)-1 {
+	if i > len(u.Post)-1 {
 		err = errors.New("number out of range")
 		return
 	}
@@ -97,33 +96,33 @@ func EditPost(users []User, n int) (err error) {
 		return
 	}
 
-	users[n].Post[i] = string(aux)
+	u.Post[i] = string(aux)
 
 	return
 }
 
-func DeletePost(users []User, n int) (err error) {
+func DeletePost(u *User) (err error) {
 	var i int
 	fmt.Scanln(&i)
 	i--
 
-	if i > len(users[n].Post)-1 {
+	if i > len(u.Post)-1 {
 		err = errors.New("number out of range")
 		return
 	}
 
-	users[n].Post = append(users[n].Post[:i], users[n].Post[i+1:]...)
+	u.Post = append(u.Post[:i], u.Post[i+1:]...)
 
 	return
 }
 
-func ShowAllPosts(u User) {
+func ShowAllPosts(u *User) {
 	for i, v := range u.Post {
 		fmt.Printf("%d. %s\n", i+1, v)
 	}
 }
 
-func ShowUserPost(users []User) (err error) {
+func ShowUserPost(users []User) (u *User, err error) {
 	fmt.Println("Enter user name")
 	aux, _, err := bufio.NewReader(os.Stdin).ReadLine()
 	if err != nil {
@@ -131,19 +130,12 @@ func ShowUserPost(users []User) (err error) {
 		return
 	}
 
-	for _, u := range users {
-		if u.Name == string(aux) {
-			fmt.Printf("- %s's posts -\n", u.Name)
-
-			for i, v := range u.Post {
-				fmt.Printf("%d. %s\n", i+1, v)
-			}
-
-			return
+	for i := range users {
+		if users[i].Name == string(aux) {
+			u = &users[i]
+			break
 		}
 	}
-
-	err = errors.New("User not found")
 
 	return
 }

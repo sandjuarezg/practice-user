@@ -49,8 +49,8 @@ func main() {
 
 		case 1:
 
-			n, err := user.LogIn(users)
-			if n < 0 {
+			u, err := user.LogIn(users)
+			if u == nil {
 				log.Println("User not found")
 
 				err = functionality.CleanConsole()
@@ -80,7 +80,7 @@ func main() {
 					continue
 				}
 
-				fmt.Printf("- Welcome %s -\n", users[n].Name)
+				fmt.Printf("- Welcome %s -\n", u.Name)
 				fmt.Println("0. Sign off")
 				fmt.Println("1. Add post")
 				fmt.Println("2. Edit post")
@@ -121,16 +121,17 @@ func main() {
 						continue
 					}
 
-					users[n].Post = append(users[n].Post, string(post))
+					u.Post = append(u.Post, string(post))
+
 					fmt.Println()
 					fmt.Println("Post added successfully")
 
 				case 2:
 
 					fmt.Println("- Enter num of post to edit -")
-					user.ShowAllPosts(users[n])
+					user.ShowAllPosts(u)
 
-					err = user.EditPost(users, n)
+					err = user.EditPost(u)
 					if err != nil {
 						log.Println(err)
 
@@ -148,9 +149,9 @@ func main() {
 				case 3:
 
 					fmt.Println("- Enter num of post to delete -")
-					user.ShowAllPosts(users[n])
+					user.ShowAllPosts(u)
 
-					err = user.DeletePost(users, n)
+					err = user.DeletePost(u)
 					if err != nil {
 						log.Println(err)
 
@@ -168,7 +169,7 @@ func main() {
 				case 4:
 
 					fmt.Println("- All your post -")
-					user.ShowAllPosts(users[n])
+					user.ShowAllPosts(u)
 
 					fmt.Println()
 					fmt.Println("Press ENTER to continue")
@@ -176,7 +177,17 @@ func main() {
 
 				case 5:
 
-					err := user.ShowUserPost(users)
+					u, err := user.ShowUserPost(users)
+					if u == nil {
+						log.Println("User not found")
+
+						err = functionality.CleanConsole()
+						if err != nil {
+							log.Println(err)
+						}
+						continue
+					}
+
 					if err != nil {
 						log.Println(err)
 
@@ -187,6 +198,9 @@ func main() {
 
 						continue
 					}
+
+					fmt.Printf("- %s's posts -\n", u.Name)
+					user.ShowAllPosts(u)
 
 					fmt.Println()
 					fmt.Println("Press ENTER to continue")
