@@ -2,7 +2,6 @@ package user
 
 import (
 	"errors"
-	"fmt"
 )
 
 type User struct {
@@ -11,21 +10,21 @@ type User struct {
 	Post []string
 }
 
-var users []User
-
-func AddUser(u User) {
-	users = append(users, u)
+type users struct {
+	users []User
 }
 
-func LogIn(aux User) (u *User, err error) {
-	for i := range users {
-		if users[i].Name == aux.Name && users[i].Pass == aux.Pass {
-			u = &users[i]
+var us users
+
+func GetUser(name string) (u *User, err error) {
+	for i := range us.users {
+		if us.users[i].Name == name {
+			u = &us.users[i]
 			break
 		}
 	}
 
-	if u == nil {
+	if u.isEmpty() {
 		err = errors.New("user not found")
 		return
 	}
@@ -33,36 +32,87 @@ func LogIn(aux User) (u *User, err error) {
 	return
 }
 
-func AddPost(u *User, post string) {
-	u.Post = append(u.Post, post)
+func (u *User) isEmpty() bool {
+	return u == nil
 }
 
-func EditPost(u *User, postIndex int, newPost string) {
-	u.Post[postIndex] = newPost
-}
-
-func DeletePost(u *User, postIntex int) {
-	u.Post = append(u.Post[:postIntex], u.Post[postIntex+1:]...)
-}
-
-func ShowPosts(u *User) {
-	for i, v := range u.Post {
-		fmt.Printf("%d. %s\n", i+1, v)
+func (u *User) AddUser() (err error) {
+	if u.isEmpty() {
+		err = errors.New("user is empty")
+		return
 	}
+
+	us.users = append(us.users, *u)
+
+	return
 }
 
-func GetUser(name string) (u *User, err error) {
-	for i := range users {
-		if users[i].Name == name {
-			u = &users[i]
+func (aux User) LogIn() (u *User, err error) {
+	for i := range us.users {
+		if us.users[i].Name == aux.Name && us.users[i].Pass == aux.Pass {
+			u = &us.users[i]
 			break
 		}
 	}
 
-	if u == nil {
-		err = errors.New("user not found")
+	if u.isEmpty() {
+		err = errors.New("user is empty")
 		return
 	}
+
+	return
+}
+
+func (u *User) AddPost(post string) (err error) {
+	if u.isEmpty() {
+		err = errors.New("user is empty")
+		return
+	}
+
+	u.Post = append(u.Post, post)
+
+	return
+}
+
+func (u *User) EditPost(postIndex int, newPost string) (err error) {
+	if u.isEmpty() {
+		err = errors.New("user is empty")
+		return
+	}
+
+	if postIndex > len(u.Post)-1 {
+		err = errors.New("number out of range")
+		return
+	}
+
+	u.Post[postIndex] = newPost
+
+	return
+}
+
+func (u *User) DeletePost(postIndex int) (err error) {
+	if u.isEmpty() {
+		err = errors.New("user is empty")
+		return
+	}
+
+	if postIndex > len(u.Post)-1 {
+		err = errors.New("number out of range")
+		return
+	}
+
+	u.Post = append(u.Post[:postIndex], u.Post[postIndex+1:]...)
+
+	return
+}
+
+func (u *User) GetPosts() (post []string, err error) {
+	if u.isEmpty() {
+		err = errors.New("user is empty")
+		return
+	}
+
+	post = u.Post
 
 	return
 }

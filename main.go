@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/sandjuarezg/practice-user/functionality"
 	"github.com/sandjuarezg/practice-user/user"
@@ -16,13 +14,12 @@ func main() {
 		exit bool
 	)
 
-	err := functionality.CleanConsole()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
 	for !exit {
+		err := functionality.CleanConsole()
+		if err != nil {
+			log.Println(err)
+			return
+		}
 
 		fmt.Println("- Registro de Usuarios -")
 		fmt.Println("0. Exit")
@@ -42,42 +39,23 @@ func main() {
 			fmt.Println(". . . .  B Y E  . . . .")
 			exit = true
 
-			err = functionality.CleanConsole()
+			err := functionality.CleanConsole()
 			if err != nil {
 				log.Println(err)
-				continue
+				return
 			}
 
 		case 1:
 
-			var aux user.User
-
-			fmt.Println("Enter user name")
-			name, _, err := bufio.NewReader(os.Stdin).ReadLine()
-			if err != nil {
-				log.Println("Error to find name", err)
-				continue
-			}
-			aux.Name = string(name)
-
-			fmt.Println()
-
-			fmt.Println("Enter password")
-			pass, _, err := bufio.NewReader(os.Stdin).ReadLine()
-			if err != nil {
-				log.Println("Error to find password", err)
-				continue
-			}
-			aux.Pass = string(pass)
-
-			u, err := user.LogIn(aux)
+			aux, err := functionality.AskNamePass()
 			if err != nil {
 				log.Println(err)
+				continue
+			}
 
-				err = functionality.CleanConsole()
-				if err != nil {
-					log.Println(err)
-				}
+			u, err := aux.LogIn()
+			if err != nil {
+				log.Println(err)
 				continue
 			}
 
@@ -112,22 +90,19 @@ func main() {
 					fmt.Println(". . . .  B Y E  . . . .")
 					back = true
 
-					err = functionality.CleanConsole()
+				case 1:
+
+					post, err := functionality.AskPostText()
 					if err != nil {
 						log.Println(err)
 						continue
 					}
 
-				case 1:
-
-					fmt.Print("Enter text: ")
-					post, _, err := bufio.NewReader(os.Stdin).ReadLine()
+					err = u.AddPost(post)
 					if err != nil {
-						log.Println("Error to add post", err)
+						log.Println(err)
 						continue
 					}
-
-					user.AddPost(u, string(post))
 
 					fmt.Println()
 					fmt.Println("Post added successfully")
@@ -136,32 +111,26 @@ func main() {
 
 					var i int
 
-					fmt.Println("- Enter num of post to edit -")
-					user.ShowPosts(u)
-					fmt.Scanln(&i)
-					i--
-					if i > len(u.Post)-1 {
-						log.Println("number out of range")
-						continue
-					}
-
-					fmt.Println()
-					fmt.Print("Enter text: ")
-					aux, _, err := bufio.NewReader(os.Stdin).ReadLine()
-					if err != nil {
-						log.Println("Error to edit post", err)
-						continue
-					}
-
-					user.EditPost(u, i, string(aux))
+					fmt.Println("- Enter num of post -")
+					err := functionality.ShowUserPost(u)
 					if err != nil {
 						log.Println(err)
+						continue
+					}
 
-						err = functionality.CleanConsole()
-						if err != nil {
-							log.Println(err)
-						}
+					fmt.Scanln(&i)
+					i--
 
+					fmt.Println()
+					aux, err := functionality.AskPostText()
+					if err != nil {
+						log.Println(err)
+						continue
+					}
+
+					err = u.EditPost(i, aux)
+					if err != nil {
+						log.Println(err)
 						continue
 					}
 
@@ -172,17 +141,21 @@ func main() {
 
 					var i int
 
-					fmt.Println("- Enter num of post to delete -")
-					user.ShowPosts(u)
-					fmt.Scanln(&i)
-					i--
-
-					if i > len(u.Post)-1 {
-						log.Panicln("number out of range")
+					fmt.Println("- Enter num of post -")
+					err := functionality.ShowUserPost(u)
+					if err != nil {
+						log.Println(err)
 						continue
 					}
 
-					user.DeletePost(u, i)
+					fmt.Scanln(&i)
+					i--
+
+					err = u.DeletePost(i)
+					if err != nil {
+						log.Println(err)
+						continue
+					}
 
 					fmt.Println()
 					fmt.Println("Post deleted successfully")
@@ -190,7 +163,11 @@ func main() {
 				case 4:
 
 					fmt.Println("- All your post -")
-					user.ShowPosts(u)
+					err := functionality.ShowUserPost(u)
+					if err != nil {
+						log.Println(err)
+						continue
+					}
 
 					fmt.Println()
 					fmt.Println("Press ENTER to continue")
@@ -198,28 +175,25 @@ func main() {
 
 				case 5:
 
-					fmt.Println("Enter user name")
-					name, _, err := bufio.NewReader(os.Stdin).ReadLine()
+					name, err := functionality.AskName()
 					if err != nil {
-						log.Println("Error to find name", err)
+						log.Println(err)
 						continue
 					}
 
-					u, err := user.GetUser(string(name))
+					u, err := user.GetUser(name)
 					if err != nil {
 						log.Println(err)
-
-						err = functionality.CleanConsole()
-						if err != nil {
-							log.Println(err)
-						}
-
 						continue
 					}
 
 					fmt.Println()
 					fmt.Printf("- %s's posts -\n", u.Name)
-					user.ShowPosts(u)
+					err = functionality.ShowUserPost(u)
+					if err != nil {
+						log.Println(err)
+						continue
+					}
 
 					fmt.Println()
 					fmt.Println("Press ENTER to continue")
@@ -229,56 +203,28 @@ func main() {
 
 					fmt.Println("Option not valid")
 
-					err = functionality.CleanConsole()
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-
 				}
 			}
 
 		case 2:
-			var u user.User
-
-			fmt.Println("Enter user name")
-			aux, _, err := bufio.NewReader(os.Stdin).ReadLine()
+			u, err := functionality.AskNamePass()
 			if err != nil {
-				log.Println("Error to add name", err)
+				log.Println(err)
 				continue
 			}
-			u.Name = string(aux)
 
-			fmt.Println()
-
-			fmt.Println("Enter password")
-			aux, _, err = bufio.NewReader(os.Stdin).ReadLine()
+			err = u.AddUser()
 			if err != nil {
-				log.Println("Error to add password", err)
+				log.Println(err)
 				continue
 			}
-			u.Pass = string(aux)
-
-			user.AddUser(u)
 
 			fmt.Println()
 			fmt.Println("User added successfully")
 
-			err = functionality.CleanConsole()
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-
 		default:
 
 			fmt.Println("Option not valid")
-
-			err = functionality.CleanConsole()
-			if err != nil {
-				log.Println(err)
-				continue
-			}
 
 		}
 
