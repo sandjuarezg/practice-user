@@ -1,11 +1,8 @@
 package user
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
-	"log"
-	"os"
 )
 
 type User struct {
@@ -14,49 +11,13 @@ type User struct {
 	Post []string
 }
 
-func CreateUser() (u User, err error) {
-	fmt.Println("Enter user name")
-	aux, _, err := bufio.NewReader(os.Stdin).ReadLine()
-	if err != nil {
-		log.Println("Error to add name", err)
-		return
-	}
-	u.Name = string(aux)
+var users []User
 
-	fmt.Println()
-
-	fmt.Println("Enter password")
-	aux, _, err = bufio.NewReader(os.Stdin).ReadLine()
-	if err != nil {
-		log.Println("Error to add password", err)
-		return
-	}
-	u.Pass = string(aux)
-
-	return
+func AddUser(u User) {
+	users = append(users, u)
 }
 
-func LogIn(users []User) (u *User, err error) {
-	var aux User
-
-	fmt.Println("Enter user name")
-	name, _, err := bufio.NewReader(os.Stdin).ReadLine()
-	if err != nil {
-		log.Println("Error to find name", err)
-		return
-	}
-	aux.Name = string(name)
-
-	fmt.Println()
-
-	fmt.Println("Enter password")
-	pass, _, err := bufio.NewReader(os.Stdin).ReadLine()
-	if err != nil {
-		log.Println("Error to find password", err)
-		return
-	}
-	aux.Pass = string(pass)
-
+func LogIn(aux User) (u *User, err error) {
 	for i := range users {
 		if users[i].Name == aux.Name && users[i].Pass == aux.Pass {
 			u = &users[i]
@@ -64,77 +25,43 @@ func LogIn(users []User) (u *User, err error) {
 		}
 	}
 
-	return
-}
-
-func CreatePost() (post []byte, err error) {
-
-	fmt.Print("Enter text: ")
-	post, _, err = bufio.NewReader(os.Stdin).ReadLine()
-	if err != nil {
-		log.Println("Error to add post", err)
+	if u == nil {
+		err = errors.New("user not found")
 		return
 	}
 
 	return
 }
 
-func EditPost(u *User) (err error) {
-	var i int
-	fmt.Scanln(&i)
-	i--
-
-	if i > len(u.Post)-1 {
-		err = errors.New("number out of range")
-		return
-	}
-
-	fmt.Print("Enter text: ")
-	aux, _, err := bufio.NewReader(os.Stdin).ReadLine()
-	if err != nil {
-		log.Println("Error to edit post", err)
-		return
-	}
-
-	u.Post[i] = string(aux)
-
-	return
+func AddPost(u *User, post string) {
+	u.Post = append(u.Post, post)
 }
 
-func DeletePost(u *User) (err error) {
-	var i int
-	fmt.Scanln(&i)
-	i--
-
-	if i > len(u.Post)-1 {
-		err = errors.New("number out of range")
-		return
-	}
-
-	u.Post = append(u.Post[:i], u.Post[i+1:]...)
-
-	return
+func EditPost(u *User, postIndex int, newPost string) {
+	u.Post[postIndex] = newPost
 }
 
-func ShowAllPosts(u *User) {
+func DeletePost(u *User, postIntex int) {
+	u.Post = append(u.Post[:postIntex], u.Post[postIntex+1:]...)
+}
+
+func ShowPosts(u *User) {
 	for i, v := range u.Post {
 		fmt.Printf("%d. %s\n", i+1, v)
 	}
 }
 
-func GetUser(users []User) (u *User, err error) {
-	fmt.Println("Enter user name")
-	aux, _, err := bufio.NewReader(os.Stdin).ReadLine()
-	if err != nil {
-		log.Println("Error to find name", err)
-		return
-	}
-
+func GetUser(name string) (u *User, err error) {
 	for i := range users {
-		if users[i].Name == string(aux) {
+		if users[i].Name == name {
 			u = &users[i]
 			break
 		}
+	}
+
+	if u == nil {
+		err = errors.New("user not found")
+		return
 	}
 
 	return

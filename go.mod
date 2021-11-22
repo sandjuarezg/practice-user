@@ -1,3 +1,3 @@
-module github.com/sandjuarezg/practice-user-memory
+module github.com/sandjuarezg/practice-user
 
 go 1.16
