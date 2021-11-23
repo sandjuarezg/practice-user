@@ -11,6 +11,20 @@ import (
 	"github.com/sandjuarezg/practice-user/user"
 )
 
+func PrepareFilePaths() (err error) {
+	err = os.MkdirAll("./user/files/users", 0666)
+	if err != nil {
+		return
+	}
+
+	err = os.MkdirAll("./user/files/posts", 0666)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 func CleanConsole() (err error) {
 	fmt.Println(". . . . . . . . . . . .")
 	time.Sleep(3 * time.Second)

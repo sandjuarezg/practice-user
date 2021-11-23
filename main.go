@@ -14,6 +14,11 @@ func main() {
 		exit bool
 	)
 
+	err := functionality.PrepareFilePaths()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for !exit {
 		err := functionality.CleanConsole()
 		if err != nil {
