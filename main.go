@@ -52,13 +52,13 @@ func main() {
 
 		case 1:
 
-			aux, err := functionality.AskNamePass()
+			name, passwd, err := functionality.ScanNamePasswd()
 			if err != nil {
 				log.Println(err)
 				continue
 			}
 
-			u, err := aux.LogIn()
+			u, err := user.LogIn(name, passwd)
 			if err != nil {
 				log.Println(err)
 				continue
@@ -97,7 +97,7 @@ func main() {
 
 				case 1:
 
-					post, err := functionality.AskPostText()
+					post, err := functionality.ScanPostText()
 					if err != nil {
 						log.Println(err)
 						continue
@@ -117,7 +117,7 @@ func main() {
 					var i int
 
 					fmt.Println("- Enter num of post -")
-					err := functionality.ShowUserPost(u)
+					err := functionality.PrintUserPost(&u)
 					if err != nil {
 						log.Println(err)
 						continue
@@ -127,7 +127,7 @@ func main() {
 					i--
 
 					fmt.Println()
-					aux, err := functionality.AskPostText()
+					aux, err := functionality.ScanPostText()
 					if err != nil {
 						log.Println(err)
 						continue
@@ -147,7 +147,7 @@ func main() {
 					var i int
 
 					fmt.Println("- Enter num of post -")
-					err := functionality.ShowUserPost(u)
+					err := functionality.PrintUserPost(&u)
 					if err != nil {
 						log.Println(err)
 						continue
@@ -168,7 +168,7 @@ func main() {
 				case 4:
 
 					fmt.Println("- All your post -")
-					err := functionality.ShowUserPost(u)
+					err := functionality.PrintUserPost(&u)
 					if err != nil {
 						log.Println(err)
 						continue
@@ -180,7 +180,7 @@ func main() {
 
 				case 5:
 
-					name, err := functionality.AskName()
+					name, err := functionality.ScanName()
 					if err != nil {
 						log.Println(err)
 						continue
@@ -194,7 +194,7 @@ func main() {
 
 					fmt.Println()
 					fmt.Printf("- %s's posts -\n", u.Name)
-					err = functionality.ShowUserPost(u)
+					err = functionality.PrintUserPost(&u)
 					if err != nil {
 						log.Println(err)
 						continue
@@ -212,13 +212,13 @@ func main() {
 			}
 
 		case 2:
-			u, err := functionality.AskNamePass()
+			name, passwd, err := functionality.ScanNamePasswd()
 			if err != nil {
 				log.Println(err)
 				continue
 			}
 
-			err = u.AddUser()
+			err = user.AddUser(name, passwd)
 			if err != nil {
 				log.Println(err)
 				continue

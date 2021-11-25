@@ -12,12 +12,12 @@ import (
 )
 
 func PrepareFilePaths() (err error) {
-	err = os.MkdirAll("./user/files/users", 0666)
+	err = os.MkdirAll("./files/users", 0666)
 	if err != nil {
 		return
 	}
 
-	err = os.MkdirAll("./user/files/posts", 0666)
+	err = os.MkdirAll("./files/posts", 0666)
 	if err != nil {
 		return
 	}
@@ -40,29 +40,29 @@ func CleanConsole() (err error) {
 	return
 }
 
-func AskNamePass() (aux user.User, err error) {
+func ScanNamePasswd() (name, passwd string, err error) {
 	fmt.Println("Enter user name")
-	name, _, err := bufio.NewReader(os.Stdin).ReadLine()
+	aux, _, err := bufio.NewReader(os.Stdin).ReadLine()
 	if err != nil {
 		err = errors.New("error to find name")
 		return
 	}
-	aux.Name = string(name)
+	name = string(aux)
 
 	fmt.Println()
 
 	fmt.Println("Enter password")
-	pass, _, err := bufio.NewReader(os.Stdin).ReadLine()
+	aux, _, err = bufio.NewReader(os.Stdin).ReadLine()
 	if err != nil {
 		err = errors.New("error to find password")
 		return
 	}
-	aux.Pass = string(pass)
+	passwd = string(aux)
 
 	return
 }
 
-func AskName() (name string, err error) {
+func ScanName() (name string, err error) {
 	fmt.Println("Enter user name")
 	aux, _, err := bufio.NewReader(os.Stdin).ReadLine()
 	if err != nil {
@@ -74,7 +74,7 @@ func AskName() (name string, err error) {
 	return
 }
 
-func AskPostText() (post string, err error) {
+func ScanPostText() (post string, err error) {
 	fmt.Print("Enter text: ")
 	aux, _, err := bufio.NewReader(os.Stdin).ReadLine()
 	if err != nil {
@@ -87,7 +87,7 @@ func AskPostText() (post string, err error) {
 	return
 }
 
-func ShowUserPost(u *user.User) (err error) {
+func PrintUserPost(u *user.User) (err error) {
 	posts, err := u.GetPosts()
 	if err != nil {
 		return
