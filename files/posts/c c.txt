@@ -1,4 +1,0 @@
-dos
-tres
-cuatro
-ultimo
