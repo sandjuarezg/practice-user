@@ -21,25 +21,22 @@ func GetUser(name string) (u User, err error) {
 	}
 	defer file.Close()
 
-	u, err = SearchUserFromFile(name, file)
+	ban, err := IsNotExistUserFromFile(name, file)
 	if err != nil {
 		return
 	}
 
-	if u.Name == "" {
+	if ban {
 		err = errors.New("user not found")
 		return
 	}
+
+	u.Name = name
 
 	return
 }
 
 func AddUser(name, passwd string) (err error) {
-	if name == "" {
-		err = errors.New("user not found")
-		return
-	}
-
 	file, err := os.OpenFile("./files/users/users.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return
@@ -70,11 +67,6 @@ func LogIn(name, passwd string) (u User, err error) {
 }
 
 func (u User) AddPost(post string) (err error) {
-	if u.Name == "" {
-		err = errors.New("user not found")
-		return
-	}
-
 	file, err := os.OpenFile(fmt.Sprintf("./files/posts/%s.txt", u.Name), os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
 		return
@@ -90,11 +82,6 @@ func (u User) AddPost(post string) (err error) {
 }
 
 func (u User) EditPost(postIndex int, newPost string) (err error) {
-	if u.Name == "" {
-		err = errors.New("user not found")
-		return
-	}
-
 	if postIndex > len(u.Post)-1 {
 		err = errors.New("number out of range")
 		return
@@ -117,11 +104,6 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 }
 
 func (u User) DeletePost(postIndex int) (err error) {
-	if u.Name == "" {
-		err = errors.New("user not found")
-		return
-	}
-
 	if postIndex > len(u.Post)-1 {
 		err = errors.New("number out of range")
 		return
@@ -144,11 +126,6 @@ func (u User) DeletePost(postIndex int) (err error) {
 }
 
 func (u *User) GetPosts() (post []string, err error) {
-	if u.Name == "" {
-		err = errors.New("user not found")
-		return
-	}
-
 	file, err := os.Open(fmt.Sprintf("./files/posts/%s.txt", u.Name))
 	if err != nil {
 		return
@@ -180,7 +157,9 @@ func WriteUserPasswdToFile(name, passwd string, file *os.File) (err error) {
 	return
 }
 
-func SearchUserFromFile(name string, file *os.File) (u User, err error) {
+func IsNotExistUserFromFile(name string, file *os.File) (ban bool, err error) {
+	ban = true
+
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
@@ -189,17 +168,12 @@ func SearchUserFromFile(name string, file *os.File) (u User, err error) {
 		if strings.HasPrefix(line, "u:") {
 
 			if name == strings.TrimPrefix(line, "u:") {
-				u.Name = name
+				ban = false
 				break
 			}
 
 		}
 
-	}
-
-	if u.Name == "" {
-		err = errors.New("user not found")
-		return
 	}
 
 	return
