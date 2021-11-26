@@ -21,10 +21,7 @@ func GetUserByName(name string) (u User, err error) {
 	}
 	defer file.Close()
 
-	ban, err := ExistUserFromFile(name, file)
-	if err != nil {
-		return
-	}
+	ban := ExistUserFromFile(name, file)
 
 	if !ban {
 		err = errors.New("user not found")
@@ -58,10 +55,13 @@ func LogIn(name, passwd string) (u User, err error) {
 	}
 	defer file.Close()
 
-	u, err = SearchUserPasswdFromFile(name, passwd, file)
-	if err != nil {
-		return
+	ban := ExistUserPasswdFromFile(name, passwd, file)
+	if !ban {
+		err = errors.New("user not found")
 	}
+
+	u.Name = name
+	u.Passwd = passwd
 
 	return
 }
@@ -81,7 +81,7 @@ func (u User) AddPostToFile(post string) (err error) {
 	return
 }
 
-func (u User) EditPostFromFile(postIndex int, newPost string) (err error) {
+func (u User) EditPost(postIndex int, newPost string) (err error) {
 	if postIndex > len(u.Post)-1 && postIndex < 0 {
 		err = errors.New("number out of range")
 		return
@@ -103,7 +103,7 @@ func (u User) EditPostFromFile(postIndex int, newPost string) (err error) {
 	return
 }
 
-func (u User) DeletePostFromFile(postIndex int) (err error) {
+func (u User) DeletePost(postIndex int) (err error) {
 	if postIndex > len(u.Post)-1 && postIndex < 0 {
 		err = errors.New("number out of range")
 		return
@@ -157,7 +157,7 @@ func WriteUserPasswdToFile(u User, file *os.File) (err error) {
 	return
 }
 
-func ExistUserFromFile(name string, file *os.File) (ban bool, err error) {
+func ExistUserFromFile(name string, file *os.File) (ban bool) {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
@@ -177,7 +177,7 @@ func ExistUserFromFile(name string, file *os.File) (ban bool, err error) {
 	return
 }
 
-func SearchUserPasswdFromFile(name, passwd string, file *os.File) (u User, err error) {
+func ExistUserPasswdFromFile(name, passwd string, file *os.File) (ban bool) {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
@@ -193,8 +193,7 @@ func SearchUserPasswdFromFile(name, passwd string, file *os.File) (u User, err e
 					if strings.HasPrefix(line, "p:") {
 
 						if passwd == strings.TrimPrefix(line, "p:") {
-							u.Name = name
-							u.Passwd = passwd
+							ban = true
 							break
 						}
 
@@ -205,11 +204,6 @@ func SearchUserPasswdFromFile(name, passwd string, file *os.File) (u User, err e
 
 		}
 
-	}
-
-	if u.Name == "" {
-		err = errors.New("user not found")
-		return
 	}
 
 	return

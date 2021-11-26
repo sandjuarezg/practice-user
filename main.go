@@ -139,7 +139,7 @@ func main() {
 						continue
 					}
 
-					err = u.EditPostFromFile(i, aux)
+					err = u.EditPost(i, aux)
 					if err != nil {
 						log.Println(err)
 						continue
@@ -168,7 +168,7 @@ func main() {
 					fmt.Scanln(&i)
 					i--
 
-					err = u.DeletePostFromFile(i)
+					err = u.DeletePost(i)
 					if err != nil {
 						log.Println(err)
 						continue
