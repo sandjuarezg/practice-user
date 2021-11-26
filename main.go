@@ -103,7 +103,7 @@ func main() {
 						continue
 					}
 
-					err = u.AddPost(post)
+					err = u.AddPostToFile(post)
 					if err != nil {
 						log.Println(err)
 						continue
@@ -117,7 +117,13 @@ func main() {
 					var i int
 
 					fmt.Println("- Enter num of post -")
-					err := functionality.PrintUserPost(&u)
+
+					posts, err := u.SyncPosts()
+					if err != nil {
+						return
+					}
+
+					err = functionality.PrintUserPost(posts)
 					if err != nil {
 						log.Println(err)
 						continue
@@ -133,7 +139,7 @@ func main() {
 						continue
 					}
 
-					err = u.EditPost(i, aux)
+					err = u.EditPostFromFile(i, aux)
 					if err != nil {
 						log.Println(err)
 						continue
@@ -147,7 +153,13 @@ func main() {
 					var i int
 
 					fmt.Println("- Enter num of post -")
-					err := functionality.PrintUserPost(&u)
+
+					posts, err := u.SyncPosts()
+					if err != nil {
+						return
+					}
+
+					err = functionality.PrintUserPost(posts)
 					if err != nil {
 						log.Println(err)
 						continue
@@ -156,7 +168,7 @@ func main() {
 					fmt.Scanln(&i)
 					i--
 
-					err = u.DeletePost(i)
+					err = u.DeletePostFromFile(i)
 					if err != nil {
 						log.Println(err)
 						continue
@@ -168,7 +180,13 @@ func main() {
 				case 4:
 
 					fmt.Println("- All your post -")
-					err := functionality.PrintUserPost(&u)
+
+					posts, err := u.SyncPosts()
+					if err != nil {
+						return
+					}
+
+					err = functionality.PrintUserPost(posts)
 					if err != nil {
 						log.Println(err)
 						continue
@@ -186,7 +204,7 @@ func main() {
 						continue
 					}
 
-					u, err := user.GetUser(name)
+					u, err := user.GetUserByName(name)
 					if err != nil {
 						log.Println(err)
 						continue
@@ -194,7 +212,13 @@ func main() {
 
 					fmt.Println()
 					fmt.Printf("- %s's posts -\n", u.Name)
-					err = functionality.PrintUserPost(&u)
+
+					posts, err := u.SyncPosts()
+					if err != nil {
+						return
+					}
+
+					err = functionality.PrintUserPost(posts)
 					if err != nil {
 						log.Println(err)
 						continue
@@ -218,7 +242,9 @@ func main() {
 				continue
 			}
 
-			err = user.AddUser(name, passwd)
+			u := user.User{Name: name, Passwd: passwd}
+
+			err = user.AddUserToFile(u)
 			if err != nil {
 				log.Println(err)
 				continue

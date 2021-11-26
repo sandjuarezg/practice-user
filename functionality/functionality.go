@@ -7,8 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"time"
-
-	"github.com/sandjuarezg/practice-user/user"
 )
 
 func PrepareFilePaths() (err error) {
@@ -87,12 +85,7 @@ func ScanPostText() (post string, err error) {
 	return
 }
 
-func PrintUserPost(u *user.User) (err error) {
-	posts, err := u.GetPosts()
-	if err != nil {
-		return
-	}
-
+func PrintUserPost(posts []string) (err error) {
 	if len(posts) == 0 {
 		err = errors.New("user's posts not found")
 		return
