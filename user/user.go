@@ -14,14 +14,19 @@ type User struct {
 	Post   []string
 }
 
+type file struct {
+	desc *os.File
+}
+
 func GetUserByName(name string) (u User, err error) {
-	file, err := os.Open("./files/users/users.txt")
+	var f file
+	f.desc, err = os.Open("./files/users/users.txt")
 	if err != nil {
 		return
 	}
-	defer file.Close()
+	defer f.desc.Close()
 
-	ban := ExistUserFromFile(name, file)
+	ban := f.ExistUser(name)
 
 	if !ban {
 		err = errors.New("user not found")
@@ -34,13 +39,14 @@ func GetUserByName(name string) (u User, err error) {
 }
 
 func AddUserToFile(u User) (err error) {
-	file, err := os.OpenFile("./files/users/users.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+	var f file
+	f.desc, err = os.OpenFile("./files/users/users.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		return
 	}
-	defer file.Close()
+	defer f.desc.Close()
 
-	err = WriteUserPasswdToFile(u, file)
+	err = f.WriteUserPasswd(u)
 	if err != nil {
 		return
 	}
@@ -49,13 +55,14 @@ func AddUserToFile(u User) (err error) {
 }
 
 func LogIn(name, passwd string) (u User, err error) {
-	file, err := os.Open("./files/users/users.txt")
+	var f file
+	f.desc, err = os.Open("./files/users/users.txt")
 	if err != nil {
 		return
 	}
-	defer file.Close()
+	defer f.desc.Close()
 
-	ban := ExistUserPasswdFromFile(name, passwd, file)
+	ban := f.ExistUserPasswd(name, passwd)
 	if !ban {
 		err = errors.New("user not found")
 	}
@@ -67,8 +74,7 @@ func LogIn(name, passwd string) (u User, err error) {
 }
 
 func (u User) AddPostToFile(post string) (err error) {
-	path := fmt.Sprintf("./files/posts/%s.txt", u.Name)
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
+	file, err := os.OpenFile(fmt.Sprintf("./files/posts/%s.txt", u.Name), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
 	if err != nil {
 		return
 	}
@@ -88,15 +94,16 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 		return
 	}
 
-	file, err := os.Create(fmt.Sprintf("./files/posts/%s.txt", u.Name))
+	var f file
+	f.desc, err = os.Create(fmt.Sprintf("./files/posts/%s.txt", u.Name))
 	if err != nil {
 		return
 	}
-	defer file.Close()
+	defer f.desc.Close()
 
 	u.Post[postIndex] = newPost
 
-	err = WritePosts(u.Post, file)
+	err = f.WritePosts(u.Post)
 	if err != nil {
 		return
 	}
@@ -110,15 +117,16 @@ func (u User) DeletePost(postIndex int) (err error) {
 		return
 	}
 
-	file, err := os.Create(fmt.Sprintf("./files/posts/%s.txt", u.Name))
+	var f file
+	f.desc, err = os.Create(fmt.Sprintf("./files/posts/%s.txt", u.Name))
 	if err != nil {
 		return
 	}
-	defer file.Close()
+	defer f.desc.Close()
 
 	u.Post = append(u.Post[:postIndex], u.Post[postIndex+1:]...)
 
-	err = WritePosts(u.Post, file)
+	err = f.WritePosts(u.Post)
 	if err != nil {
 		return
 	}
@@ -144,13 +152,13 @@ func (u *User) SyncPosts() (post []string, err error) {
 	return
 }
 
-func WriteUserPasswdToFile(u User, file *os.File) (err error) {
-	_, err = file.WriteString("u:" + u.Name + "\n")
+func (file file) WriteUserPasswd(u User) (err error) {
+	_, err = file.desc.WriteString("u:" + u.Name + "\n")
 	if err != nil {
 		return
 	}
 
-	_, err = file.WriteString("p:" + u.Passwd + "\n\n")
+	_, err = file.desc.WriteString("p:" + u.Passwd + "\n\n")
 	if err != nil {
 		return
 	}
@@ -158,8 +166,8 @@ func WriteUserPasswdToFile(u User, file *os.File) (err error) {
 	return
 }
 
-func ExistUserFromFile(name string, file *os.File) (ban bool) {
-	scanner := bufio.NewScanner(file)
+func (file file) ExistUser(name string) (ban bool) {
+	scanner := bufio.NewScanner(file.desc)
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -178,8 +186,8 @@ func ExistUserFromFile(name string, file *os.File) (ban bool) {
 	return
 }
 
-func ExistUserPasswdFromFile(name, passwd string, file *os.File) (ban bool) {
-	scanner := bufio.NewScanner(file)
+func (file file) ExistUserPasswd(name, passwd string) (ban bool) {
+	scanner := bufio.NewScanner(file.desc)
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -210,9 +218,9 @@ func ExistUserPasswdFromFile(name, passwd string, file *os.File) (ban bool) {
 	return
 }
 
-func WritePosts(post []string, file *os.File) (err error) {
+func (file file) WritePosts(post []string) (err error) {
 	for _, v := range post {
-		_, err = file.WriteString(v + "\n")
+		_, err = file.desc.WriteString(v + "\n")
 		if err != nil {
 			return
 		}
