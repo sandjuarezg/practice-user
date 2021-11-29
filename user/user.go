@@ -67,7 +67,8 @@ func LogIn(name, passwd string) (u User, err error) {
 }
 
 func (u User) AddPostToFile(post string) (err error) {
-	file, err := os.OpenFile(fmt.Sprintf("./files/posts/%s.txt", u.Name), os.O_APPEND|os.O_CREATE, 0666)
+	path := fmt.Sprintf("./files/posts/%s.txt", u.Name)
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
 		return
 	}

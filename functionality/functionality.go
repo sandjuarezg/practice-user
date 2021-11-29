@@ -10,12 +10,12 @@ import (
 )
 
 func PrepareFilePaths() (err error) {
-	err = os.MkdirAll("./files/users", 0770)
+	err = os.MkdirAll("./files/users", 0700)
 	if err != nil {
 		return
 	}
 
-	err = os.MkdirAll("./files/posts", 0770)
+	err = os.MkdirAll("./files/posts", 0700)
 	if err != nil {
 		return
 	}
