@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
-	"strings"
 )
 
 type User struct {
@@ -14,24 +14,13 @@ type User struct {
 	Post   []string
 }
 
-type file struct {
-	desc *os.File
-}
-
 func GetUserByName(name string) (u User, err error) {
-	var f file
-	f.desc, err = os.Open("./files/users/users.txt")
+	file, err := os.Open(fmt.Sprintf("./files/users/%s.txt", name))
 	if err != nil {
-		return
-	}
-	defer f.desc.Close()
-
-	ban := f.ExistUser(name)
-
-	if !ban {
 		err = errors.New("user not found")
 		return
 	}
+	defer file.Close()
 
 	u.Name = name
 
@@ -39,15 +28,16 @@ func GetUserByName(name string) (u User, err error) {
 }
 
 func AddUserToFile(u User) (err error) {
-	var f file
-	f.desc, err = os.OpenFile("./files/users/users.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	file, err := os.Create(fmt.Sprintf("./files/users/%s.txt", u.Name))
 	if err != nil {
+		err = errors.New("error to add user")
 		return
 	}
-	defer f.desc.Close()
+	defer file.Close()
 
-	err = f.WriteUserPasswd(u)
+	_, err = file.WriteString(u.Passwd)
 	if err != nil {
+		err = errors.New("error to write password")
 		return
 	}
 
@@ -55,16 +45,22 @@ func AddUserToFile(u User) (err error) {
 }
 
 func LogIn(name, passwd string) (u User, err error) {
-	var f file
-	f.desc, err = os.Open("./files/users/users.txt")
+	file, err := os.Open(fmt.Sprintf("./files/users/%s.txt", name))
 	if err != nil {
+		err = errors.New("user not found")
 		return
 	}
-	defer f.desc.Close()
+	defer file.Close()
 
-	ban := f.ExistUserPasswd(name, passwd)
-	if !ban {
-		err = errors.New("user not found")
+	content, err := io.ReadAll(file)
+	if err != nil {
+		err = errors.New("error to read password")
+		return
+	}
+
+	if string(content) != passwd {
+		err = errors.New("incorrect password")
+		return
 	}
 
 	u.Name = name
@@ -94,16 +90,15 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 		return
 	}
 
-	var f file
-	f.desc, err = os.Create(fmt.Sprintf("./files/posts/%s.txt", u.Name))
+	file, err := os.Create(fmt.Sprintf("./files/posts/%s.txt", u.Name))
 	if err != nil {
 		return
 	}
-	defer f.desc.Close()
+	defer file.Close()
 
 	u.Post[postIndex] = newPost
 
-	err = f.WritePosts(u.Post)
+	err = WritePostsToFile(u.Post, file)
 	if err != nil {
 		return
 	}
@@ -117,16 +112,15 @@ func (u User) DeletePost(postIndex int) (err error) {
 		return
 	}
 
-	var f file
-	f.desc, err = os.Create(fmt.Sprintf("./files/posts/%s.txt", u.Name))
+	file, err := os.Create(fmt.Sprintf("./files/posts/%s.txt", u.Name))
 	if err != nil {
 		return
 	}
-	defer f.desc.Close()
+	defer file.Close()
 
 	u.Post = append(u.Post[:postIndex], u.Post[postIndex+1:]...)
 
-	err = f.WritePosts(u.Post)
+	err = WritePostsToFile(u.Post, file)
 	if err != nil {
 		return
 	}
@@ -152,75 +146,9 @@ func (u *User) SyncPosts() (post []string, err error) {
 	return
 }
 
-func (file file) WriteUserPasswd(u User) (err error) {
-	_, err = file.desc.WriteString("u:" + u.Name + "\n")
-	if err != nil {
-		return
-	}
-
-	_, err = file.desc.WriteString("p:" + u.Passwd + "\n\n")
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-func (file file) ExistUser(name string) (ban bool) {
-	scanner := bufio.NewScanner(file.desc)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if strings.HasPrefix(line, "u:") {
-
-			if name == strings.TrimPrefix(line, "u:") {
-				ban = true
-				break
-			}
-
-		}
-
-	}
-
-	return
-}
-
-func (file file) ExistUserPasswd(name, passwd string) (ban bool) {
-	scanner := bufio.NewScanner(file.desc)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if strings.HasPrefix(line, "u:") {
-
-			if name == strings.TrimPrefix(line, "u:") {
-
-				if scanner.Scan() {
-					line = scanner.Text()
-
-					if strings.HasPrefix(line, "p:") {
-
-						if passwd == strings.TrimPrefix(line, "p:") {
-							ban = true
-							break
-						}
-
-					}
-
-				}
-			}
-
-		}
-
-	}
-
-	return
-}
-
-func (file file) WritePosts(post []string) (err error) {
+func WritePostsToFile(post []string, file *os.File) (err error) {
 	for _, v := range post {
-		_, err = file.desc.WriteString(v + "\n")
+		_, err = file.WriteString(v + "\n")
 		if err != nil {
 			return
 		}
