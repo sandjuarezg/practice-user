@@ -74,6 +74,7 @@ func main() {
 					continue
 				}
 
+				opc = 0
 				fmt.Printf("- Welcome %s -\n", u.Name)
 				fmt.Println("0. Sign off")
 				fmt.Println("1. Add post")
