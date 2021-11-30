@@ -120,7 +120,8 @@ func main() {
 
 					posts, err := u.SyncPosts()
 					if err != nil {
-						return
+						log.Println(err)
+						continue
 					}
 
 					err = functionality.PrintUserPost(posts)
@@ -156,7 +157,8 @@ func main() {
 
 					posts, err := u.SyncPosts()
 					if err != nil {
-						return
+						log.Println(err)
+						continue
 					}
 
 					err = functionality.PrintUserPost(posts)
@@ -183,7 +185,8 @@ func main() {
 
 					posts, err := u.SyncPosts()
 					if err != nil {
-						return
+						log.Println(err)
+						continue
 					}
 
 					err = functionality.PrintUserPost(posts)
@@ -215,7 +218,8 @@ func main() {
 
 					posts, err := u.SyncPosts()
 					if err != nil {
-						return
+						log.Println(err)
+						continue
 					}
 
 					err = functionality.PrintUserPost(posts)
