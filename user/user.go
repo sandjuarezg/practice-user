@@ -1,34 +1,42 @@
 package user
 
 import (
-	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 type User struct {
 	Name   string
 	Passwd string
-	Post   []string
 }
 
-func GetUserByName(name string) (u User, err error) {
-	file, err := os.Open(fmt.Sprintf("./files/users/%s.txt", name))
+func PrepareUserPath(u User) (err error) {
+	err = os.MkdirAll(fmt.Sprintf("./files/%s", u.Name), 0700)
 	if err != nil {
-		err = errors.New("user not found")
+		err = errors.New("error to create user dir")
 		return
 	}
-	defer file.Close()
 
-	u.Name = name
+	return
+}
+
+func PrepareUserPostsPath(u User) (err error) {
+	err = os.MkdirAll(fmt.Sprintf("./files/%s/posts", u.Name), 0700)
+	if err != nil {
+		fmt.Println(err)
+		err = errors.New("error to create user's posts dir")
+		return
+	}
 
 	return
 }
 
 func AddUserToFile(u User) (err error) {
-	file, err := os.Create(fmt.Sprintf("./files/users/%s.txt", u.Name))
+	file, err := os.Create(fmt.Sprintf("./files/%s/%s.txt", u.Name, u.Name))
 	if err != nil {
 		err = errors.New("error to add user")
 		return
@@ -45,7 +53,7 @@ func AddUserToFile(u User) (err error) {
 }
 
 func LogIn(name, passwd string) (u User, err error) {
-	file, err := os.Open(fmt.Sprintf("./files/users/%s.txt", name))
+	file, err := os.Open(fmt.Sprintf("./files/%s/%s.txt", name, name))
 	if err != nil {
 		err = errors.New("user not found")
 		return
@@ -69,14 +77,44 @@ func LogIn(name, passwd string) (u User, err error) {
 	return
 }
 
+func ShowPostByName(name string) (err error) {
+	files, err := os.ReadDir(fmt.Sprintf("./files/%s/posts", name))
+	if err != nil {
+		return
+	}
+
+	for _, f := range files {
+		fmt.Printf("Key: %s\n", strings.TrimSuffix(f.Name(), ".txt"))
+
+		data, err := os.ReadFile(fmt.Sprintf("./files/%s/posts/%s", name, f.Name()))
+		if err != nil {
+			break
+		}
+
+		if bytes.Equal(data[len(data)-1:], []byte("\n")) {
+			data = data[:len(data)-1]
+		}
+
+		fmt.Printf("Content: %s\n", data)
+		fmt.Println()
+	}
+
+	return
+}
+
 func (u User) AddPostToFile(post string) (err error) {
-	file, err := os.OpenFile(fmt.Sprintf("./files/posts/%s.txt", u.Name), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
+	files, err := os.ReadDir(fmt.Sprintf("./files/%s/posts", u.Name))
+	if err != nil {
+		return
+	}
+
+	file, err := os.Create(fmt.Sprintf("./files/%s/posts/%d.txt", u.Name, len(files)+1))
 	if err != nil {
 		return
 	}
 	defer file.Close()
 
-	_, err = file.WriteString(post + "\n")
+	_, err = file.WriteString(post)
 	if err != nil {
 		return
 	}
@@ -85,20 +123,23 @@ func (u User) AddPostToFile(post string) (err error) {
 }
 
 func (u User) EditPost(postIndex int, newPost string) (err error) {
-	if postIndex > len(u.Post)-1 && postIndex < 0 {
+	files, err := os.ReadDir(fmt.Sprintf("./files/%s/posts", u.Name))
+	if err != nil {
+		return
+	}
+
+	if postIndex > len(files) || postIndex < 1 {
 		err = errors.New("number out of range")
 		return
 	}
 
-	file, err := os.Create(fmt.Sprintf("./files/posts/%s.txt", u.Name))
+	file, err := os.Create(fmt.Sprintf("./files/%s/posts/%d.txt", u.Name, postIndex))
 	if err != nil {
 		return
 	}
 	defer file.Close()
 
-	u.Post[postIndex] = newPost
-
-	err = WritePostsToFile(u.Post, file)
+	_, err = file.WriteString(newPost)
 	if err != nil {
 		return
 	}
@@ -107,52 +148,21 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 }
 
 func (u User) DeletePost(postIndex int) (err error) {
-	if postIndex > len(u.Post)-1 && postIndex < 0 {
+	files, err := os.ReadDir(fmt.Sprintf("./files/%s/posts", u.Name))
+	if err != nil {
+		return
+	}
+
+	if postIndex > len(files) || postIndex < 1 {
 		err = errors.New("number out of range")
 		return
 	}
 
-	file, err := os.Create(fmt.Sprintf("./files/posts/%s.txt", u.Name))
-	if err != nil {
-		return
-	}
-	defer file.Close()
-
-	u.Post = append(u.Post[:postIndex], u.Post[postIndex+1:]...)
-
-	err = WritePostsToFile(u.Post, file)
+	err = os.Remove(fmt.Sprintf("./files/%s/posts/%d.txt", u.Name, postIndex))
 	if err != nil {
 		return
 	}
 
 	return
-}
 
-func (u *User) SyncPosts() (post []string, err error) {
-	file, err := os.Open(fmt.Sprintf("./files/posts/%s.txt", u.Name))
-	if err != nil {
-		return
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		post = append(post, scanner.Text())
-	}
-
-	u.Post = post
-
-	return
-}
-
-func WritePostsToFile(post []string, file *os.File) (err error) {
-	for _, v := range post {
-		_, err = file.WriteString(v + "\n")
-		if err != nil {
-			return
-		}
-	}
-
-	return
 }

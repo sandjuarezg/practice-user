@@ -14,11 +14,6 @@ func main() {
 		exit bool
 	)
 
-	err := functionality.PrepareFilePaths()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	for !exit {
 		err := functionality.CleanConsole()
 		if err != nil {
@@ -104,6 +99,12 @@ func main() {
 						continue
 					}
 
+					err = user.PrepareUserPostsPath(u)
+					if err != nil {
+						log.Println(err)
+						continue
+					}
+
 					err = u.AddPostToFile(post)
 					if err != nil {
 						log.Println(err)
@@ -117,22 +118,13 @@ func main() {
 
 					var i int
 
-					fmt.Println("- Enter num of post -")
-
-					posts, err := u.SyncPosts()
+					err = user.ShowPostByName(u.Name)
 					if err != nil {
 						log.Println(err)
 						continue
 					}
-
-					err = functionality.PrintUserPost(posts)
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-
+					fmt.Print("Enter key of post: ")
 					fmt.Scanln(&i)
-					i--
 
 					fmt.Println()
 					aux, err := functionality.ScanPostText()
@@ -154,22 +146,13 @@ func main() {
 
 					var i int
 
-					fmt.Println("- Enter num of post -")
-
-					posts, err := u.SyncPosts()
+					err = user.ShowPostByName(u.Name)
 					if err != nil {
 						log.Println(err)
 						continue
 					}
-
-					err = functionality.PrintUserPost(posts)
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-
+					fmt.Print("Enter key of post: ")
 					fmt.Scanln(&i)
-					i--
 
 					err = u.DeletePost(i)
 					if err != nil {
@@ -184,19 +167,12 @@ func main() {
 
 					fmt.Println("- All your post -")
 
-					posts, err := u.SyncPosts()
+					err = user.ShowPostByName(u.Name)
 					if err != nil {
 						log.Println(err)
 						continue
 					}
 
-					err = functionality.PrintUserPost(posts)
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-
-					fmt.Println()
 					fmt.Println("Press ENTER to continue")
 					fmt.Scanln()
 
@@ -208,28 +184,15 @@ func main() {
 						continue
 					}
 
-					u, err := user.GetUserByName(name)
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-
 					fmt.Println()
 					fmt.Printf("- %s's posts -\n", u.Name)
 
-					posts, err := u.SyncPosts()
+					err = user.ShowPostByName(name)
 					if err != nil {
 						log.Println(err)
 						continue
 					}
 
-					err = functionality.PrintUserPost(posts)
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-
-					fmt.Println()
 					fmt.Println("Press ENTER to continue")
 					fmt.Scanln()
 
@@ -248,6 +211,12 @@ func main() {
 			}
 
 			u := user.User{Name: name, Passwd: passwd}
+
+			err = user.PrepareUserPath(u)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
 
 			err = user.AddUserToFile(u)
 			if err != nil {

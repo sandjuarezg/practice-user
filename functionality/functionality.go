@@ -9,20 +9,6 @@ import (
 	"time"
 )
 
-func PrepareFilePaths() (err error) {
-	err = os.MkdirAll("./files/users", 0700)
-	if err != nil {
-		return
-	}
-
-	err = os.MkdirAll("./files/posts", 0700)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
 func CleanConsole() (err error) {
 	fmt.Println(". . . . . . . . . . . .")
 	time.Sleep(3 * time.Second)
@@ -81,19 +67,6 @@ func ScanPostText() (post string, err error) {
 	}
 
 	post = string(aux)
-
-	return
-}
-
-func PrintUserPost(posts []string) (err error) {
-	if len(posts) == 0 {
-		err = errors.New("user's posts not found")
-		return
-	}
-
-	for i, v := range posts {
-		fmt.Printf("%d. %s\n", i+1, v)
-	}
 
 	return
 }
