@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -108,7 +109,15 @@ func (u User) AddPostToFile(post string) (err error) {
 		return
 	}
 
-	file, err := os.Create(fmt.Sprintf("./files/%s/posts/%d.txt", u.Name, len(files)+1))
+	var n int
+	if len(files) != 0 {
+		n, err = strconv.Atoi(strings.TrimSuffix(files[len(files)-1].Name(), ".txt"))
+		if err != nil {
+			return
+		}
+	}
+
+	file, err := os.Create(fmt.Sprintf("./files/%s/posts/%d.txt", u.Name, n+1))
 	if err != nil {
 		return
 	}
