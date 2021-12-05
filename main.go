@@ -99,12 +99,6 @@ func main() {
 						continue
 					}
 
-					err = user.PrepareUserPostsPath(u)
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-
 					err = u.AddPostToFile(post)
 					if err != nil {
 						log.Println(err)
@@ -165,8 +159,6 @@ func main() {
 
 				case 4:
 
-					fmt.Println("- All your post -")
-
 					err = user.ShowPostByName(u.Name)
 					if err != nil {
 						log.Println(err)
@@ -211,12 +203,6 @@ func main() {
 			}
 
 			u := user.User{Name: name, Passwd: passwd}
-
-			err = user.PrepareUserPath(u)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
 
 			err = user.AddUserToFile(u)
 			if err != nil {
