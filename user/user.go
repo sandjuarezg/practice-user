@@ -147,7 +147,7 @@ func ShowPostByName(name string) (err error) {
 				continue
 			}
 
-			fmt.Printf("Post's %s:\n", name)
+			fmt.Printf("Post's %s\n", name)
 			var i int
 
 			for {
