@@ -10,27 +10,45 @@ import (
 )
 
 type users struct {
-	XMLName xml.Name `xml:"Users"`
+	XMLName xml.Name `xml:"users"`
 
-	Users []User `xml:"User"`
+	Users []User `xml:"user"`
 }
 
 type User struct {
-	Name   string `xml:"Name"`
-	Passwd string `xml:"Passwd"`
-	Posts  []post `xml:"Posts"`
+	Name   string `xml:"name"`
+	Passwd string `xml:"passwd"`
+	Posts  []post `xml:"posts"`
 }
 
 type post struct {
-	Post string
+	Post string `xml:"post"`
 }
 
-func GetIndexUser(u User, us []User) (i int) {
-	i = -1
-	for n, v := range us {
-		if v.Name == u.Name && v.Passwd == u.Passwd {
-			i = n
+func GetAllDataFromTag(r io.Reader, tag string) (data []string) {
+	decoder := xml.NewDecoder(r)
+
+	for {
+		t, _ := decoder.Token()
+		if t == nil {
 			break
+		}
+
+		s, ok := t.(xml.StartElement)
+		if !ok {
+			continue
+		}
+
+		if s.Name.Local == tag {
+			t, _ = decoder.Token()
+			if t == nil {
+				break
+			}
+
+			s, ok := t.(xml.CharData)
+			if ok {
+				data = append(data, string(s))
+			}
 		}
 	}
 
@@ -38,7 +56,7 @@ func GetIndexUser(u User, us []User) (i int) {
 }
 
 func AddUserToFile(u User) (err error) {
-	file, err := os.OpenFile("./users.xml", os.O_CREATE|os.O_RDONLY, 0600)
+	file, err := os.OpenFile("./data/users.xml", os.O_CREATE|os.O_RDONLY, 0600)
 	if err != nil {
 		return
 	}
@@ -65,7 +83,7 @@ func AddUserToFile(u User) (err error) {
 		return
 	}
 
-	err = os.WriteFile(file.Name(), b, 0)
+	_, err = file.WriteAt(b, 0)
 	if err != nil {
 		return
 	}
@@ -74,55 +92,108 @@ func AddUserToFile(u User) (err error) {
 }
 
 func LogIn(name, passwd string) (u User, err error) {
-	file, err := os.Open("./users.xml")
+	file, err := os.Open("./data/users.xml")
 	if err != nil {
 		return
 	}
 	defer file.Close()
 
-	content, err := io.ReadAll(file)
-	if err != nil {
-		return
-	}
+	names := GetAllDataFromTag(file, "name")
+	file.Seek(0, 0)
 
-	var us users
-	err = xml.Unmarshal(content, &us)
-	if err != nil {
-		return
-	}
+	passwds := GetAllDataFromTag(file, "passwd")
+	err = errors.New("user not found")
 
-	n := GetIndexUser(User{Name: name, Passwd: passwd}, us.Users)
-	if n < 0 {
-		err = errors.New("user not found")
-		return
-	}
+	for i := range names {
 
-	u = us.Users[n]
+		for y := range passwds {
+			if i != y {
+				continue
+			}
+
+			if names[i] == name && passwds[y] == passwd {
+				u.Name = name
+				u.Passwd = passwd
+
+				err = nil
+				break
+			}
+		}
+	}
 
 	return
 }
 
 func ShowPostByName(name string) (err error) {
-	content, err := os.ReadFile("./users.xml")
+	file, err := os.Open("./data/users.xml")
 	if err != nil {
 		return
 	}
+	defer file.Close()
 
-	var us users
-	err = xml.Unmarshal(content, &us)
-	if err != nil {
-		return
-	}
-
-	for _, v := range us.Users {
-		if v.Name == name {
-			fmt.Printf("Post's %s:\n", name)
-			for i, v := range v.Posts {
-				fmt.Printf("Key: %d\n", i+1)
-				fmt.Printf("Content: %s\n", v)
-				fmt.Println()
-			}
+	decoder := xml.NewDecoder(file)
+	for {
+		t, _ := decoder.Token()
+		if t == nil {
 			break
+		}
+
+		s, ok := t.(xml.StartElement)
+		if !ok {
+			continue
+		}
+
+		if s.Name.Local == "name" {
+			t, _ = decoder.Token()
+			if t == nil {
+				break
+			}
+
+			s, ok := t.(xml.CharData)
+			if !ok {
+				break
+			}
+
+			if string(s) != name {
+				continue
+			}
+
+			fmt.Printf("Post's %s:\n", name)
+			var i int
+
+			for {
+				t, _ = decoder.Token()
+				if t == nil {
+					break
+				}
+
+				data, ok := t.(xml.StartElement)
+				if !ok {
+					continue
+				}
+
+				if data.Name.Local == "user" {
+					break
+				}
+
+				if data.Name.Local == "post" {
+					t, _ = decoder.Token()
+					if t == nil {
+						break
+					}
+
+					s, ok := t.(xml.CharData)
+					if !ok {
+						break
+					}
+
+					fmt.Printf("Key: %d\n", i+1)
+					fmt.Printf("Content: %s\n", s)
+					fmt.Println()
+					i++
+				}
+			}
+
 		}
 	}
 
@@ -130,7 +201,7 @@ func ShowPostByName(name string) (err error) {
 }
 
 func (u User) AddPostToFile(postText string) (err error) {
-	file, err := os.Open("./users.xml")
+	file, err := os.OpenFile("./data/users.xml", os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
@@ -148,30 +219,30 @@ func (u User) AddPostToFile(postText string) (err error) {
 		return
 	}
 
-	n := GetIndexUser(u, us.Users)
-	if n < 0 {
-		err = errors.New("user not found")
-		return
+	err = errors.New("user not found")
+	for n, v := range us.Users {
+		if v.Name == u.Name {
+			us.Users[n].Posts = append(us.Users[n].Posts, post{postText})
+			err = nil
+			break
+		}
 	}
-
-	us.Users[n].Posts = append(us.Users[n].Posts, post{postText})
 
 	b, err := xml.MarshalIndent(us, "", "\t")
 	if err != nil {
 		return
 	}
 
-	err = os.WriteFile(file.Name(), b, 0)
+	_, err = file.WriteAt(b, 0)
 	if err != nil {
 		return
 	}
 
 	return
-
 }
 
 func (u User) EditPost(postIndex int, newPost string) (err error) {
-	file, err := os.Open("./users.xml")
+	file, err := os.OpenFile("./data/users.xml", os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
@@ -189,26 +260,29 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 		return
 	}
 
-	n := GetIndexUser(u, us.Users)
-	if n < 0 {
-		err = errors.New("user not found")
-		return
-	}
+	err = errors.New("user not found")
+	for n, v := range us.Users {
+		if v.Name == u.Name {
 
-	postIndex--
-	if postIndex > len(us.Users[n].Posts)-1 || postIndex < 0 {
-		err = errors.New("number out of range")
-		return
-	}
+			postIndex--
+			if postIndex > len(us.Users[n].Posts)-1 || postIndex < 0 {
+				err = errors.New("number out of range")
+				return
+			}
 
-	us.Users[n].Posts[postIndex].Post = newPost
+			us.Users[n].Posts[postIndex].Post = newPost
+			err = nil
+
+			break
+		}
+	}
 
 	b, err := xml.MarshalIndent(us, "", "\t")
 	if err != nil {
 		return
 	}
 
-	err = os.WriteFile(file.Name(), b, 0)
+	_, err = file.WriteAt(b, 0)
 	if err != nil {
 		return
 	}
@@ -217,7 +291,7 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 }
 
 func (u User) DeletePost(postIndex int) (err error) {
-	file, err := os.Open("./users.xml")
+	file, err := os.OpenFile("./data/users.xml", os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
@@ -235,26 +309,29 @@ func (u User) DeletePost(postIndex int) (err error) {
 		return
 	}
 
-	n := GetIndexUser(u, us.Users)
-	if n < 0 {
-		err = errors.New("user not found")
-		return
-	}
+	err = errors.New("user not found")
+	for n, v := range us.Users {
+		if v.Name == u.Name {
 
-	postIndex--
-	if postIndex > len(us.Users[n].Posts)-1 || postIndex < 0 {
-		err = errors.New("number out of range")
-		return
-	}
+			postIndex--
+			if postIndex > len(us.Users[n].Posts)-1 || postIndex < 0 {
+				err = errors.New("number out of range")
+				return
+			}
 
-	us.Users[n].Posts = append(us.Users[n].Posts[:postIndex], us.Users[n].Posts[postIndex+1:]...)
+			us.Users[n].Posts = append(us.Users[n].Posts[:postIndex], us.Users[n].Posts[postIndex+1:]...)
+			err = nil
+
+			break
+		}
+	}
 
 	b, err := xml.MarshalIndent(us, "", "\t")
 	if err != nil {
 		return
 	}
 
-	err = os.WriteFile(file.Name(), b, 0)
+	_, err = file.WriteAt(b, 0)
 	if err != nil {
 		return
 	}
