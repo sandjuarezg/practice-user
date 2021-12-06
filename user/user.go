@@ -2,7 +2,7 @@ package user
 
 import (
 	"bytes"
-	"encoding/xml"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -10,53 +10,51 @@ import (
 )
 
 type users struct {
-	XMLName xml.Name `xml:"users"`
-
-	Users []User `xml:"user"`
+	Users []User `json:"user"`
 }
 
 type User struct {
-	Name   string `xml:"name"`
-	Passwd string `xml:"passwd"`
-	Posts  []post `xml:"posts"`
+	Name   string `json:"name"`
+	Passwd string `json:"passwd"`
+	Posts  []post `json:"posts"`
 }
 
 type post struct {
-	Post string `xml:"post"`
+	Post string `json:"post"`
 }
 
-func GetAllDataFromTag(r io.Reader, tag string) (data []string) {
-	decoder := xml.NewDecoder(r)
+func GetAllDataFromTag(r io.Reader, tag string) (data []json.Token) {
+	decoder := json.NewDecoder(r)
 
 	for {
-		t, _ := decoder.Token()
-		if t == nil {
+		t, err := decoder.Token()
+		if err == io.EOF {
 			break
 		}
 
-		s, ok := t.(xml.StartElement)
-		if !ok {
+		_, ok := t.(json.Delim)
+		if ok {
 			continue
 		}
 
-		if s.Name.Local == tag {
-			t, _ = decoder.Token()
-			if t == nil {
+		if t == tag {
+
+			s, err := decoder.Token()
+			if err == io.EOF {
 				break
 			}
 
-			s, ok := t.(xml.CharData)
-			if ok {
-				data = append(data, string(s))
-			}
+			data = append(data, s)
+
 		}
+
 	}
 
 	return
 }
 
 func AddUserToFile(u User) (err error) {
-	file, err := os.OpenFile("./data/users.xml", os.O_CREATE|os.O_RDONLY, 0600)
+	file, err := os.OpenFile("./data/users.json", os.O_CREATE|os.O_RDONLY, 0600)
 	if err != nil {
 		return
 	}
@@ -70,7 +68,7 @@ func AddUserToFile(u User) (err error) {
 	var us users
 
 	if !bytes.Equal(content, []byte("")) {
-		err = xml.Unmarshal(content, &us)
+		err = json.Unmarshal(content, &us)
 		if err != nil {
 			return
 		}
@@ -78,7 +76,7 @@ func AddUserToFile(u User) (err error) {
 
 	us.Users = append(us.Users, u)
 
-	b, err := xml.MarshalIndent(us, "", "\t")
+	b, err := json.MarshalIndent(us, "", "\t")
 	if err != nil {
 		return
 	}
@@ -92,7 +90,7 @@ func AddUserToFile(u User) (err error) {
 }
 
 func LogIn(name, passwd string) (u User, err error) {
-	file, err := os.Open("./data/users.xml")
+	file, err := os.Open("./data/users.json")
 	if err != nil {
 		return
 	}
@@ -125,36 +123,27 @@ func LogIn(name, passwd string) (u User, err error) {
 }
 
 func ShowPostByName(name string) (err error) {
-	file, err := os.Open("./data/users.xml")
+	file, err := os.Open("./data/users.json")
 	if err != nil {
 		return
 	}
 	defer file.Close()
 
-	decoder := xml.NewDecoder(file)
+	decoder := json.NewDecoder(file)
 	for {
-		t, _ := decoder.Token()
-		if t == nil {
+		t, err := decoder.Token()
+		if err == io.EOF {
 			break
 		}
 
-		s, ok := t.(xml.StartElement)
-		if !ok {
-			continue
-		}
+		if t == "name" {
 
-		if s.Name.Local == "name" {
-			t, _ = decoder.Token()
-			if t == nil {
+			s, _ := decoder.Token()
+			if s == nil {
 				break
 			}
 
-			s, ok := t.(xml.CharData)
-			if !ok {
-				break
-			}
-
-			if string(s) != name {
+			if s != name {
 				continue
 			}
 
@@ -167,41 +156,32 @@ func ShowPostByName(name string) (err error) {
 					break
 				}
 
-				data, ok := t.(xml.StartElement)
-				if !ok {
-					continue
-				}
-
-				if data.Name.Local == "user" {
+				if t == "name" {
 					break
 				}
 
-				if data.Name.Local == "post" {
+				if t == "post" {
 					t, _ = decoder.Token()
 					if t == nil {
 						break
 					}
 
-					s, ok := t.(xml.CharData)
-					if !ok {
-						break
-					}
-
 					fmt.Printf("Key: %d\n", i+1)
-					fmt.Printf("Content: %s\n", s)
+					fmt.Printf("Content: %s\n", t)
 					fmt.Println()
 					i++
 				}
 			}
 
 		}
+
 	}
 
 	return
 }
 
 func (u User) AddPostToFile(postText string) (err error) {
-	file, err := os.OpenFile("./data/users.xml", os.O_RDWR, 0600)
+	file, err := os.OpenFile("./data/users.json", os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
@@ -214,7 +194,7 @@ func (u User) AddPostToFile(postText string) (err error) {
 
 	var us users
 
-	err = xml.Unmarshal(content, &us)
+	err = json.Unmarshal(content, &us)
 	if err != nil {
 		return
 	}
@@ -228,7 +208,7 @@ func (u User) AddPostToFile(postText string) (err error) {
 		}
 	}
 
-	b, err := xml.MarshalIndent(us, "", "\t")
+	b, err := json.MarshalIndent(us, "", "\t")
 	if err != nil {
 		return
 	}
@@ -242,7 +222,7 @@ func (u User) AddPostToFile(postText string) (err error) {
 }
 
 func (u User) EditPost(postIndex int, newPost string) (err error) {
-	file, err := os.OpenFile("./data/users.xml", os.O_RDWR, 0600)
+	file, err := os.OpenFile("./data/users.json", os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
@@ -255,7 +235,7 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 
 	var us users
 
-	err = xml.Unmarshal(content, &us)
+	err = json.Unmarshal(content, &us)
 	if err != nil {
 		return
 	}
@@ -277,7 +257,7 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 		}
 	}
 
-	b, err := xml.MarshalIndent(us, "", "\t")
+	b, err := json.MarshalIndent(us, "", "\t")
 	if err != nil {
 		return
 	}
@@ -291,7 +271,7 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 }
 
 func (u User) DeletePost(postIndex int) (err error) {
-	file, err := os.OpenFile("./data/users.xml", os.O_RDWR, 0600)
+	file, err := os.OpenFile("./data/users.json", os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
@@ -304,7 +284,7 @@ func (u User) DeletePost(postIndex int) (err error) {
 
 	var us users
 
-	err = xml.Unmarshal(content, &us)
+	err = json.Unmarshal(content, &us)
 	if err != nil {
 		return
 	}
@@ -326,7 +306,7 @@ func (u User) DeletePost(postIndex int) (err error) {
 		}
 	}
 
-	b, err := xml.MarshalIndent(us, "", "\t")
+	b, err := json.MarshalIndent(us, "", "\t")
 	if err != nil {
 		return
 	}

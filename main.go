@@ -177,8 +177,6 @@ func main() {
 					}
 
 					fmt.Println()
-					fmt.Printf("- %s's posts -\n", u.Name)
-
 					err = user.ShowPostByName(name)
 					if err != nil {
 						log.Println(err)
