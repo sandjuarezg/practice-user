@@ -262,6 +262,11 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 		return
 	}
 
+	err = file.Truncate(0)
+	if err != nil {
+		return
+	}
+
 	_, err = file.WriteAt(b, 0)
 	if err != nil {
 		return
@@ -307,6 +312,11 @@ func (u User) DeletePost(postIndex int) (err error) {
 	}
 
 	b, err := json.MarshalIndent(us, "", "\t")
+	if err != nil {
+		return
+	}
+
+	err = file.Truncate(0)
 	if err != nil {
 		return
 	}
