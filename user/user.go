@@ -1,11 +1,9 @@
 package user
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 )
 
@@ -23,36 +21,6 @@ type post struct {
 	Post string `json:"post"`
 }
 
-func GetAllDataFromTag(r io.Reader, tag string) (data []json.Token) {
-	decoder := json.NewDecoder(r)
-
-	for {
-		t, err := decoder.Token()
-		if err == io.EOF {
-			break
-		}
-
-		_, ok := t.(json.Delim)
-		if ok {
-			continue
-		}
-
-		if t == tag {
-
-			s, err := decoder.Token()
-			if err == io.EOF {
-				break
-			}
-
-			data = append(data, s)
-
-		}
-
-	}
-
-	return
-}
-
 func AddUserToFile(u User) (err error) {
 	file, err := os.OpenFile("./data/users.json", os.O_CREATE|os.O_RDONLY, 0600)
 	if err != nil {
@@ -60,15 +28,25 @@ func AddUserToFile(u User) (err error) {
 	}
 	defer file.Close()
 
-	content, err := io.ReadAll(file)
+	s, err := file.Stat()
 	if err != nil {
 		return
 	}
 
 	var us users
 
-	if !bytes.Equal(content, []byte("")) {
-		err = json.Unmarshal(content, &us)
+	if s.Size() != 0 {
+		err = json.NewDecoder(file).Decode(&us)
+		if err != nil {
+			return
+		}
+
+		err = file.Truncate(0)
+		if err != nil {
+			return
+		}
+
+		_, err = file.Seek(0, 0)
 		if err != nil {
 			return
 		}
@@ -76,12 +54,9 @@ func AddUserToFile(u User) (err error) {
 
 	us.Users = append(us.Users, u)
 
-	b, err := json.MarshalIndent(us, "", "\t")
-	if err != nil {
-		return
-	}
-
-	_, err = file.WriteAt(b, 0)
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "\t")
+	err = encoder.Encode(us)
 	if err != nil {
 		return
 	}
@@ -96,27 +71,25 @@ func LogIn(name, passwd string) (u User, err error) {
 	}
 	defer file.Close()
 
-	names := GetAllDataFromTag(file, "name")
-	file.Seek(0, 0)
+	var us users
 
-	passwds := GetAllDataFromTag(file, "passwd")
-	err = errors.New("user not found")
+	err = json.NewDecoder(file).Decode(&us)
+	if err != nil {
+		return
+	}
 
-	for i := range names {
-
-		for y := range passwds {
-			if i != y {
-				continue
-			}
-
-			if names[i] == name && passwds[y] == passwd {
-				u.Name = name
-				u.Passwd = passwd
-
-				err = nil
-				break
-			}
+	var ban bool
+	for i, v := range us.Users {
+		if v.Name == name && v.Passwd == passwd {
+			u = us.Users[i]
+			ban = true
+			break
 		}
+	}
+
+	if !ban {
+		err = errors.New("user not found")
+		return
 	}
 
 	return
@@ -129,52 +102,23 @@ func ShowPostByName(name string) (err error) {
 	}
 	defer file.Close()
 
-	decoder := json.NewDecoder(file)
-	for {
-		t, err := decoder.Token()
-		if err == io.EOF {
+	var us users
+
+	err = json.NewDecoder(file).Decode(&us)
+	if err != nil {
+		return
+	}
+
+	for _, v := range us.Users {
+		if v.Name == name {
+			fmt.Printf("Post's %s:\n", name)
+			for i, v := range v.Posts {
+				fmt.Printf("Key: %d\n", i+1)
+				fmt.Printf("Content: %s\n", v)
+				fmt.Println()
+			}
 			break
 		}
-
-		if t == "name" {
-
-			s, _ := decoder.Token()
-			if s == nil {
-				break
-			}
-
-			if s != name {
-				continue
-			}
-
-			fmt.Printf("Post's %s\n", name)
-			var i int
-
-			for {
-				t, _ = decoder.Token()
-				if t == nil {
-					break
-				}
-
-				if t == "name" {
-					break
-				}
-
-				if t == "post" {
-					t, _ = decoder.Token()
-					if t == nil {
-						break
-					}
-
-					fmt.Printf("Key: %d\n", i+1)
-					fmt.Printf("Content: %s\n", t)
-					fmt.Println()
-					i++
-				}
-			}
-
-		}
-
 	}
 
 	return
@@ -187,33 +131,40 @@ func (u User) AddPostToFile(postText string) (err error) {
 	}
 	defer file.Close()
 
-	content, err := io.ReadAll(file)
-	if err != nil {
-		return
-	}
-
 	var us users
 
-	err = json.Unmarshal(content, &us)
+	err = json.NewDecoder(file).Decode(&us)
 	if err != nil {
 		return
 	}
 
-	err = errors.New("user not found")
+	var ban bool
 	for n, v := range us.Users {
 		if v.Name == u.Name {
 			us.Users[n].Posts = append(us.Users[n].Posts, post{postText})
-			err = nil
+			ban = true
 			break
 		}
 	}
 
-	b, err := json.MarshalIndent(us, "", "\t")
+	if !ban {
+		err = errors.New("user not found")
+		return
+	}
+
+	err = file.Truncate(0)
 	if err != nil {
 		return
 	}
 
-	_, err = file.WriteAt(b, 0)
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return
+	}
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "\t")
+	err = encoder.Encode(us)
 	if err != nil {
 		return
 	}
@@ -228,19 +179,14 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 	}
 	defer file.Close()
 
-	content, err := io.ReadAll(file)
-	if err != nil {
-		return
-	}
-
 	var us users
 
-	err = json.Unmarshal(content, &us)
+	err = json.NewDecoder(file).Decode(&us)
 	if err != nil {
 		return
 	}
 
-	err = errors.New("user not found")
+	var ban bool
 	for n, v := range us.Users {
 		if v.Name == u.Name {
 
@@ -251,14 +197,14 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 			}
 
 			us.Users[n].Posts[postIndex].Post = newPost
-			err = nil
+			ban = true
 
 			break
 		}
 	}
 
-	b, err := json.MarshalIndent(us, "", "\t")
-	if err != nil {
+	if !ban {
+		err = errors.New("user not found")
 		return
 	}
 
@@ -267,7 +213,14 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 		return
 	}
 
-	_, err = file.WriteAt(b, 0)
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return
+	}
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "\t")
+	err = encoder.Encode(us)
 	if err != nil {
 		return
 	}
@@ -282,19 +235,14 @@ func (u User) DeletePost(postIndex int) (err error) {
 	}
 	defer file.Close()
 
-	content, err := io.ReadAll(file)
-	if err != nil {
-		return
-	}
-
 	var us users
 
-	err = json.Unmarshal(content, &us)
+	err = json.NewDecoder(file).Decode(&us)
 	if err != nil {
 		return
 	}
 
-	err = errors.New("user not found")
+	var ban bool
 	for n, v := range us.Users {
 		if v.Name == u.Name {
 
@@ -305,14 +253,14 @@ func (u User) DeletePost(postIndex int) (err error) {
 			}
 
 			us.Users[n].Posts = append(us.Users[n].Posts[:postIndex], us.Users[n].Posts[postIndex+1:]...)
-			err = nil
+			ban = true
 
 			break
 		}
 	}
 
-	b, err := json.MarshalIndent(us, "", "\t")
-	if err != nil {
+	if !ban {
+		err = errors.New("user not found")
 		return
 	}
 
@@ -321,7 +269,14 @@ func (u User) DeletePost(postIndex int) (err error) {
 		return
 	}
 
-	_, err = file.WriteAt(b, 0)
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return
+	}
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "\t")
+	err = encoder.Encode(us)
 	if err != nil {
 		return
 	}

@@ -14,6 +14,11 @@ func main() {
 		exit bool
 	)
 
+	err := functionality.PreparePathDir("./data")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for !exit {
 		err := functionality.CleanConsole()
 		if err != nil {

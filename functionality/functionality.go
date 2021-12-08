@@ -9,6 +9,15 @@ import (
 	"time"
 )
 
+func PreparePathDir(dirName string) (err error) {
+	err = os.MkdirAll(dirName, 0700)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 func CleanConsole() (err error) {
 	fmt.Println(". . . . . . . . . . . .")
 	time.Sleep(3 * time.Second)
