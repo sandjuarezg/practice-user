@@ -22,7 +22,7 @@ type post struct {
 }
 
 func AddUserToFile(u User) (err error) {
-	file, err := os.OpenFile("./data/users.json", os.O_CREATE|os.O_RDONLY, 0600)
+	file, err := os.OpenFile("./data/users.json", os.O_CREATE|os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
@@ -37,11 +37,6 @@ func AddUserToFile(u User) (err error) {
 
 	if s.Size() != 0 {
 		err = json.NewDecoder(file).Decode(&us)
-		if err != nil {
-			return
-		}
-
-		err = file.Truncate(0)
 		if err != nil {
 			return
 		}
@@ -149,11 +144,6 @@ func (u User) AddPostToFile(postText string) (err error) {
 
 	if !ban {
 		err = errors.New("user not found")
-		return
-	}
-
-	err = file.Truncate(0)
-	if err != nil {
 		return
 	}
 
