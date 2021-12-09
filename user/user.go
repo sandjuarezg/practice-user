@@ -16,7 +16,7 @@ type User struct {
 }
 
 func AddUserToFile(u User) (err error) {
-	file, err := os.OpenFile("./Data/users.json", os.O_CREATE|os.O_RDWR, 0600)
+	file, err := os.OpenFile("./data/users.json", os.O_CREATE|os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
@@ -40,14 +40,14 @@ func AddUserToFile(u User) (err error) {
 			return
 		}
 
-		err = file.Truncate(0)
-		if err != nil {
-			return
-		}
-
 	}
 
 	us = append(us, u)
+
+	err = file.Truncate(0)
+	if err != nil {
+		return
+	}
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "\t")
@@ -60,7 +60,7 @@ func AddUserToFile(u User) (err error) {
 }
 
 func LogIn(name, passwd string) (u User, err error) {
-	file, err := os.Open("./Data/users.json")
+	file, err := os.Open("./data/users.json")
 	if err != nil {
 		return
 	}
@@ -91,7 +91,7 @@ func LogIn(name, passwd string) (u User, err error) {
 }
 
 func ShowPostByName(name string) (err error) {
-	file, err := os.Open("./Data/users.json")
+	file, err := os.Open("./data/users.json")
 	if err != nil {
 		return
 	}
@@ -120,7 +120,7 @@ func ShowPostByName(name string) (err error) {
 }
 
 func (u User) AddPostToFile(postText string) (err error) {
-	file, err := os.OpenFile("./Data/users.json", os.O_RDWR, 0600)
+	file, err := os.OpenFile("./data/users.json", os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
@@ -168,7 +168,7 @@ func (u User) AddPostToFile(postText string) (err error) {
 }
 
 func (u User) EditPost(postIndex int, newPost string) (err error) {
-	file, err := os.OpenFile("./Data/users.json", os.O_RDWR, 0600)
+	file, err := os.OpenFile("./data/users.json", os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
@@ -223,7 +223,7 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 }
 
 func (u User) DeletePost(postIndex int) (err error) {
-	file, err := os.OpenFile("./Data/users.json", os.O_RDWR, 0600)
+	file, err := os.OpenFile("./data/users.json", os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
