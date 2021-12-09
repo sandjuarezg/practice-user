@@ -132,6 +132,7 @@ func main() {
 						continue
 					}
 
+					i--
 					err = u.EditPost(i, aux)
 					if err != nil {
 						log.Println(err)
@@ -153,6 +154,7 @@ func main() {
 					fmt.Print("Enter key of post: ")
 					fmt.Scanln(&i)
 
+					i--
 					err = u.DeletePost(i)
 					if err != nil {
 						log.Println(err)

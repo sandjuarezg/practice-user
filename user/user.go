@@ -7,22 +7,16 @@ import (
 	"os"
 )
 
-type users struct {
-	Users []User `json:"user"`
-}
+type users []User
 
 type User struct {
-	Name   string `json:"name"`
-	Passwd string `json:"passwd"`
-	Posts  []post `json:"posts"`
-}
-
-type post struct {
-	Post string `json:"post"`
+	Name   string   `json:"name"`
+	Passwd string   `json:"passwd"`
+	Posts  []string `json:"posts"`
 }
 
 func AddUserToFile(u User) (err error) {
-	file, err := os.OpenFile("./data/users.json", os.O_CREATE|os.O_RDWR, 0600)
+	file, err := os.OpenFile("./Data/users.json", os.O_CREATE|os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
@@ -45,9 +39,15 @@ func AddUserToFile(u User) (err error) {
 		if err != nil {
 			return
 		}
+
+		err = file.Truncate(0)
+		if err != nil {
+			return
+		}
+
 	}
 
-	us.Users = append(us.Users, u)
+	us = append(us, u)
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "\t")
@@ -60,7 +60,7 @@ func AddUserToFile(u User) (err error) {
 }
 
 func LogIn(name, passwd string) (u User, err error) {
-	file, err := os.Open("./data/users.json")
+	file, err := os.Open("./Data/users.json")
 	if err != nil {
 		return
 	}
@@ -74,10 +74,10 @@ func LogIn(name, passwd string) (u User, err error) {
 	}
 
 	var ban bool
-	for i, v := range us.Users {
+	for _, v := range us {
 		if v.Name == name && v.Passwd == passwd {
-			u = us.Users[i]
 			ban = true
+			u = v
 			break
 		}
 	}
@@ -91,7 +91,7 @@ func LogIn(name, passwd string) (u User, err error) {
 }
 
 func ShowPostByName(name string) (err error) {
-	file, err := os.Open("./data/users.json")
+	file, err := os.Open("./Data/users.json")
 	if err != nil {
 		return
 	}
@@ -104,7 +104,7 @@ func ShowPostByName(name string) (err error) {
 		return
 	}
 
-	for _, v := range us.Users {
+	for _, v := range us {
 		if v.Name == name {
 			fmt.Printf("Post's %s:\n", name)
 			for i, v := range v.Posts {
@@ -120,7 +120,7 @@ func ShowPostByName(name string) (err error) {
 }
 
 func (u User) AddPostToFile(postText string) (err error) {
-	file, err := os.OpenFile("./data/users.json", os.O_RDWR, 0600)
+	file, err := os.OpenFile("./Data/users.json", os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
@@ -133,11 +133,16 @@ func (u User) AddPostToFile(postText string) (err error) {
 		return
 	}
 
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return
+	}
+
 	var ban bool
-	for n, v := range us.Users {
+	for n, v := range us {
 		if v.Name == u.Name {
-			us.Users[n].Posts = append(us.Users[n].Posts, post{postText})
 			ban = true
+			us[n].Posts = append(v.Posts, postText)
 			break
 		}
 	}
@@ -147,7 +152,7 @@ func (u User) AddPostToFile(postText string) (err error) {
 		return
 	}
 
-	_, err = file.Seek(0, 0)
+	err = file.Truncate(0)
 	if err != nil {
 		return
 	}
@@ -163,7 +168,7 @@ func (u User) AddPostToFile(postText string) (err error) {
 }
 
 func (u User) EditPost(postIndex int, newPost string) (err error) {
-	file, err := os.OpenFile("./data/users.json", os.O_RDWR, 0600)
+	file, err := os.OpenFile("./Data/users.json", os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
@@ -176,18 +181,22 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 		return
 	}
 
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return
+	}
+
 	var ban bool
-	for n, v := range us.Users {
+	for n, v := range us {
 		if v.Name == u.Name {
 
-			postIndex--
-			if postIndex > len(us.Users[n].Posts)-1 || postIndex < 0 {
+			ban = true
+			if postIndex > len(v.Posts)-1 || postIndex < 0 {
 				err = errors.New("number out of range")
 				return
 			}
 
-			us.Users[n].Posts[postIndex].Post = newPost
-			ban = true
+			us[n].Posts[postIndex] = newPost
 
 			break
 		}
@@ -199,11 +208,6 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 	}
 
 	err = file.Truncate(0)
-	if err != nil {
-		return
-	}
-
-	_, err = file.Seek(0, 0)
 	if err != nil {
 		return
 	}
@@ -219,7 +223,7 @@ func (u User) EditPost(postIndex int, newPost string) (err error) {
 }
 
 func (u User) DeletePost(postIndex int) (err error) {
-	file, err := os.OpenFile("./data/users.json", os.O_RDWR, 0600)
+	file, err := os.OpenFile("./Data/users.json", os.O_RDWR, 0600)
 	if err != nil {
 		return
 	}
@@ -232,18 +236,22 @@ func (u User) DeletePost(postIndex int) (err error) {
 		return
 	}
 
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return
+	}
+
 	var ban bool
-	for n, v := range us.Users {
+	for n, v := range us {
 		if v.Name == u.Name {
 
-			postIndex--
-			if postIndex > len(us.Users[n].Posts)-1 || postIndex < 0 {
+			ban = true
+			if postIndex > len(v.Posts)-1 || postIndex < 0 {
 				err = errors.New("number out of range")
 				return
 			}
 
-			us.Users[n].Posts = append(us.Users[n].Posts[:postIndex], us.Users[n].Posts[postIndex+1:]...)
-			ban = true
+			us[n].Posts = append(v.Posts[:postIndex], v.Posts[postIndex+1:]...)
 
 			break
 		}
@@ -255,11 +263,6 @@ func (u User) DeletePost(postIndex int) (err error) {
 	}
 
 	err = file.Truncate(0)
-	if err != nil {
-		return
-	}
-
-	_, err = file.Seek(0, 0)
 	if err != nil {
 		return
 	}
